@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      th, td {
+        text-align: left;
+      }
+    </style>
+
+    <script type="module">
+      async function init() {
+        const { instance } = await WebAssembly.instantiateStreaming(
+          fetch("./test.wasm")
+        );
+        
+        var valueAdd = instance.exports.binop(1,2,1);
+        var valueSub = instance.exports.binop(1,2,0);
+
+        const addResult = document.getElementById("add_result");
+        const subResult = document.getElementById("sub_result");
+        addResult.innerHTML = ""+valueAdd;
+        subResult.innerHTML = ""+valueSub;
+      }
+
+      init();
+    </script>
+  </head>
+  <body>
+    <div>
+      <h3>Simple subroutine call test</h3>
+      <p>1+2 = <span id="add_result"></span></p>
+      <p>1-2 = <span id="sub_result"></span></p>
+    </div>
+  </body>
+</html>
+

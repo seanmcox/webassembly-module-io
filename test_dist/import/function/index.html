@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      th, td {
+        text-align: left;
+      }
+    </style>
+
+    <script type="module">
+      async function init() {
+		var importObject = {
+		    module: {
+		        name: (a,b) => {
+		            return a*b;
+		        },
+		    },
+		};
+		const { instance } = await WebAssembly.instantiateStreaming(
+		    fetch("./test.wasm"),
+		    importObject
+		);
+        
+        var valueAdd = instance.exports.binop(1,2,1);
+        var valueMul = instance.exports.binop(1,2,0);
+
+        const addResult = document.getElementById("add_result");
+        const mulResult = document.getElementById("mul_result");
+        addResult.innerHTML = ""+valueAdd;
+        mulResult.innerHTML = ""+valueMul;
+      }
+
+      init();
+    </script>
+  </head>
+  <body>
+    <div>
+      <h3>Simple imported function test</h3>
+      <p>1+2 = <span id="add_result"></span></p>
+      <p>1*2 = <span id="mul_result"></span> <em>(Result provided by import.)</em></p>
+    </div>
+  </body>
+</html>
+

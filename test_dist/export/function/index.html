@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      th, td {
+        text-align: left;
+      }
+    </style>
+
+    <script type="module">
+      async function init() {
+        const { instance } = await WebAssembly.instantiateStreaming(
+          fetch("./test.wasm")
+        );
+        
+        var value = instance.exports.add(1,2);
+
+        const addResult = document.getElementById("add_result");
+        addResult.innerHTML = ""+value;
+      }
+
+      init();
+    </script>
+  </head>
+  <body>
+    <div>
+      <h3>Simple exported function test</h3>
+      <p>1+2 = <span id="add_result"></span></p>
+    </div>
+  </body>
+</html>
+
