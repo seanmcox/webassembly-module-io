@@ -6,12 +6,13 @@ package com.shtick.utils.wasm.module;
 /**
  * See: https://webassembly.github.io/spec/core/syntax/modules.html#syntax-data
  * See: https://webassembly.github.io/spec/core/binary/modules.html#binary-data
+ * See: https://webassembly.github.io/spec/core/binary/modules.html#data-section
  * 
  * @author seanmcox
  *
  */
 public class Data {
-	public enum DataMode { PASSIVE, ACTIVE}
+	public enum DataMode { PASSIVE, ACTIVE }
 	
 	private byte[] data;
 	private DataMode dataMode;
@@ -21,7 +22,7 @@ public class Data {
 	/**
 	 * @param data
 	 * @param dataMode
-	 * @param memoryIndex Ignored/meaningless for passive data mode.
+	 * @param memoryIndex Ignored/meaningless for passive data mode. However, also, should always be 0 because the current specification for WebAssembly only allows for one usable memory segment.
 	 * @param expression
 	 */
 	public Data(byte[] data, DataMode dataMode, MemoryIndex memoryIndex, Expression expression) {

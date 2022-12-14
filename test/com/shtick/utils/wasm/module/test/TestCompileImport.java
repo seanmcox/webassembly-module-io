@@ -109,9 +109,6 @@ class TestCompileImport {
 		// TODO Consider creating a function abstraction that can encapsulate the type, locals, and body of a function, which would then be translated to
 		//      a FunctionSection and a CodeSection
 		// See: https://webassembly.github.io/spec/core/binary/modules.html#binary-funcsec
-		TableSection tableSection = new TableSection(new Vector<>());
-		MemorySection memorySection = new MemorySection(new Vector<>());
-		GlobalSection globalSection = new GlobalSection(new Vector<>());
 		ExportSection exportSection;
 		{
 			Vector<Export> exports = new Vector<>();
@@ -122,7 +119,7 @@ class TestCompileImport {
 		ElementSection elementSection = new ElementSection(new Vector<>());
 		DataSection dataSection = new DataSection(new Vector<>());
 		Module module = new Module(
-			context,tableSection,memorySection,globalSection,exportSection,startSection,elementSection,
+			context,exportSection,startSection,elementSection,
 			dataSection
 		);
 		

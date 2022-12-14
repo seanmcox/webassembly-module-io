@@ -6,6 +6,7 @@ package com.shtick.utils.wasm.module;
 import java.util.Vector;
 
 /**
+ * @see https://webassembly.github.io/spec/core/binary/modules.html#data-section
  * @author seanmcox
  *
  */

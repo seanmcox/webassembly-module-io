@@ -4,6 +4,8 @@
 package com.shtick.utils.wasm.module;
 
 /**
+ * @see https://webassembly.github.io/spec/core/syntax/types.html#syntax-memtype
+ * 
  * @author seanmcox
  *
  */

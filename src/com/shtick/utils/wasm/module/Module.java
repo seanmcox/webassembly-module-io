@@ -216,9 +216,6 @@ public class Module {
 	/**
 	 * 
 	 * @param context
-	 * @param tableSection
-	 * @param memorySection
-	 * @param globalSection
 	 * @param exportSection
 	 * @param startSection
 	 * @param elementSection

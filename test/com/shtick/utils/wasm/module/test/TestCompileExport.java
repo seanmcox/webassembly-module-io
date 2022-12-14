@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import com.shtick.utils.wasm.module.Code;
 import com.shtick.utils.wasm.module.CodeSection;
 import com.shtick.utils.wasm.module.Context;
+import com.shtick.utils.wasm.module.Data;
 import com.shtick.utils.wasm.module.DataSection;
 import com.shtick.utils.wasm.module.ElementSection;
 import com.shtick.utils.wasm.module.Export;
@@ -31,7 +32,11 @@ import com.shtick.utils.wasm.module.GlobalSection;
 import com.shtick.utils.wasm.module.ImportSection;
 import com.shtick.utils.wasm.module.Index;
 import com.shtick.utils.wasm.module.Instruction;
+import com.shtick.utils.wasm.module.Limits;
+import com.shtick.utils.wasm.module.Memory;
+import com.shtick.utils.wasm.module.MemoryIndex;
 import com.shtick.utils.wasm.module.MemorySection;
+import com.shtick.utils.wasm.module.MemoryType;
 import com.shtick.utils.wasm.module.Module;
 import com.shtick.utils.wasm.module.ModuleSerializer;
 import com.shtick.utils.wasm.module.ResultType;
@@ -43,6 +48,8 @@ import com.shtick.utils.wasm.module.ValueType;
 import com.shtick.utils.wasm.module.instructions.BlockTypeIndex;
 import com.shtick.utils.wasm.module.instructions.CallByFunctionDefinition;
 import com.shtick.utils.wasm.module.instructions.I32Add;
+import com.shtick.utils.wasm.module.instructions.I32Const;
+import com.shtick.utils.wasm.module.instructions.I32Load;
 import com.shtick.utils.wasm.module.instructions.I32Sub;
 import com.shtick.utils.wasm.module.instructions.If;
 import com.shtick.utils.wasm.module.instructions.LocalGet;
@@ -162,9 +169,6 @@ class TestCompileExport {
 		FunctionDefinition export = new FunctionDefinition(new FunctionType(new ResultType(triParamTypes), new ResultType(resultTypes)), exportCode);
 		context.addFunctionDefinition(export);
 		
-		TableSection tableSection = new TableSection(new Vector<>());
-		MemorySection memorySection = new MemorySection(new Vector<>());
-		GlobalSection globalSection = new GlobalSection(new Vector<>());
 		ExportSection exportSection;
 		{
 			Vector<Export> exports = new Vector<>();
@@ -174,10 +178,7 @@ class TestCompileExport {
 		StartSection startSection = null;
 		ElementSection elementSection = new ElementSection(new Vector<>());
 		DataSection dataSection = new DataSection(new Vector<>());
-		Module module = new Module(
-			context,tableSection,memorySection,globalSection,exportSection,startSection,elementSection,
-			dataSection
-		);
+		Module module = new Module(context,exportSection,startSection,elementSection,dataSection);
 		
 //		try(ByteArrayOutputStream bout = new ByteArrayOutputStream()) {
 		File outfile = new File("test_dist/export/subroutine/test.wasm");
@@ -201,68 +202,58 @@ class TestCompileExport {
 
 	@Test
 	void testMemoryExport() {
-		Vector<ValueType> biParamTypes = new Vector<>();
-		biParamTypes.add(ValueType.NUMTYPE_I32);
-		biParamTypes.add(ValueType.NUMTYPE_I32);
 		Vector<ValueType> triParamTypes = new Vector<>();
 		triParamTypes.add(ValueType.NUMTYPE_I32);
 		triParamTypes.add(ValueType.NUMTYPE_I32);
 		triParamTypes.add(ValueType.NUMTYPE_I32);
-		Vector<ValueType> resultTypes = new Vector<>();
-		resultTypes.add(ValueType.NUMTYPE_I32);
+		Vector<ValueType> biParamTypes = new Vector<>();
+		biParamTypes.add(ValueType.NUMTYPE_I32);
+		biParamTypes.add(ValueType.NUMTYPE_I32);
+		Vector<ValueType> monoType = new Vector<>();
+		monoType.add(ValueType.NUMTYPE_I32);
+		Vector<ValueType> nullType = new Vector<>();
 
 		Context context = new Context();
-		Code sumCode;
+		Code setCode;
 		{
 			LinkedList<Instruction> instructions = new LinkedList<>();
 			instructions.add(new LocalGet(new Index(0)));
 			instructions.add(new LocalGet(new Index(1)));
 			instructions.add(new I32Add());
-			sumCode = new Code(new Vector<>(), new Expression(instructions));
+			setCode = new Code(new Vector<>(), new Expression(instructions));
 		}
-		FunctionDefinition sum = new FunctionDefinition(new FunctionType(new ResultType(biParamTypes), new ResultType(resultTypes)), sumCode);
-		context.addFunctionDefinition(sum);
-		Code diffCode;
+		Code getCode;
 		{
 			LinkedList<Instruction> instructions = new LinkedList<>();
 			instructions.add(new LocalGet(new Index(0)));
-			instructions.add(new LocalGet(new Index(1)));
-			instructions.add(new I32Sub());
-			diffCode = new Code(new Vector<>(), new Expression(instructions));
+			instructions.add(new I32Load(0, 0));
+			getCode = new Code(new Vector<>(), new Expression(instructions));
 		}
-		FunctionDefinition diff = new FunctionDefinition(new FunctionType(new ResultType(biParamTypes), new ResultType(resultTypes)), diffCode);
-		context.addFunctionDefinition(diff);
-		Code exportCode;
-		{
-			LinkedList<Instruction> instructions = new LinkedList<>();
-			instructions.add(new LocalGet(new Index(0)));
-			instructions.add(new LocalGet(new Index(1)));
-			instructions.add(new LocalGet(new Index(2)));
-			instructions.add(new If(new BlockTypeIndex(new FunctionType(new ResultType(biParamTypes), new ResultType(resultTypes)),context),
-				new Instruction[] {new CallByFunctionDefinition(sum,context)},
-				new Instruction[] {new CallByFunctionDefinition(diff,context)}));
-			exportCode = new Code(new Vector<>(), new Expression(instructions));
-		}
-		FunctionDefinition export = new FunctionDefinition(new FunctionType(new ResultType(triParamTypes), new ResultType(resultTypes)), exportCode);
-		context.addFunctionDefinition(export);
+		FunctionDefinition functionSetExport = new FunctionDefinition(new FunctionType(new ResultType(biParamTypes), new ResultType(nullType)), setCode);
+		FunctionDefinition functionGetExport = new FunctionDefinition(new FunctionType(new ResultType(monoType), new ResultType(monoType)), getCode);
+		context.addFunctionDefinition(functionSetExport);
+		context.addFunctionDefinition(functionGetExport);
+		Memory memoryExport = new Memory(new MemoryType(new Limits(1, 1)));
+		context.addMemory(memoryExport);
 		
-		TableSection tableSection = new TableSection(new Vector<>());
-		MemorySection memorySection = new MemorySection(new Vector<>());
-		GlobalSection globalSection = new GlobalSection(new Vector<>());
 		ExportSection exportSection;
 		{
 			Vector<Export> exports = new Vector<>();
-			exports.add(new Export("binop",context.getFunctionIndex(export)));
-			exports.add(new Export("exmem",MemoryIndex));
+			exports.add(new Export("set",context.getFunctionIndex(functionSetExport)));
+			exports.add(new Export("get",context.getFunctionIndex(functionGetExport)));
+			exports.add(new Export("memory",context.getMemoryIndex(memoryExport)));
 			exportSection = new ExportSection(exports);
 		}
 		StartSection startSection = null;
 		ElementSection elementSection = new ElementSection(new Vector<>());
-		DataSection dataSection = new DataSection(new Vector<>());
-		Module module = new Module(
-			context,tableSection,memorySection,globalSection,exportSection,startSection,elementSection,
-			dataSection
-		);
+		Vector<Data> data = new Vector<Data>();
+		{
+			LinkedList<Instruction> instructions = new LinkedList<Instruction>();
+			instructions.add(new I32Const(0));
+			data.add(new Data(new byte[] {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}, Data.DataMode.ACTIVE, new MemoryIndex(0), new Expression(instructions)));
+		}
+		DataSection dataSection = new DataSection(data);
+		Module module = new Module(context,exportSection,startSection,elementSection,dataSection);
 		
 //		try(ByteArrayOutputStream bout = new ByteArrayOutputStream()) {
 		File outfile = new File("test_dist/export/memory/test.wasm");
