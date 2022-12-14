@@ -50,6 +50,8 @@ import com.shtick.utils.wasm.module.instructions.CallByFunctionDefinition;
 import com.shtick.utils.wasm.module.instructions.I32Add;
 import com.shtick.utils.wasm.module.instructions.I32Const;
 import com.shtick.utils.wasm.module.instructions.I32Load;
+import com.shtick.utils.wasm.module.instructions.I32Store;
+import com.shtick.utils.wasm.module.instructions.I32Store8;
 import com.shtick.utils.wasm.module.instructions.I32Sub;
 import com.shtick.utils.wasm.module.instructions.If;
 import com.shtick.utils.wasm.module.instructions.LocalGet;
@@ -219,14 +221,14 @@ class TestCompileExport {
 			LinkedList<Instruction> instructions = new LinkedList<>();
 			instructions.add(new LocalGet(new Index(0)));
 			instructions.add(new LocalGet(new Index(1)));
-			instructions.add(new I32Add());
+			instructions.add(new I32Store(2,0));
 			setCode = new Code(new Vector<>(), new Expression(instructions));
 		}
 		Code getCode;
 		{
 			LinkedList<Instruction> instructions = new LinkedList<>();
 			instructions.add(new LocalGet(new Index(0)));
-			instructions.add(new I32Load(0, 0));
+			instructions.add(new I32Load(2, 0));
 			getCode = new Code(new Vector<>(), new Expression(instructions));
 		}
 		FunctionDefinition functionSetExport = new FunctionDefinition(new FunctionType(new ResultType(biParamTypes), new ResultType(nullType)), setCode);
@@ -246,14 +248,8 @@ class TestCompileExport {
 		}
 		StartSection startSection = null;
 		ElementSection elementSection = new ElementSection(new Vector<>());
-		Vector<Data> data = new Vector<Data>();
-		{
-			LinkedList<Instruction> instructions = new LinkedList<Instruction>();
-			instructions.add(new I32Const(0));
-			data.add(new Data(new byte[] {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}, Data.DataMode.ACTIVE, new MemoryIndex(0), new Expression(instructions)));
-		}
-		DataSection dataSection = new DataSection(data);
-		Module module = new Module(context,exportSection,startSection,elementSection,dataSection);
+		context.addData(new byte[] {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15});
+		Module module = new Module(context,exportSection,startSection,elementSection);
 		
 //		try(ByteArrayOutputStream bout = new ByteArrayOutputStream()) {
 		File outfile = new File("test_dist/export/memory/test.wasm");

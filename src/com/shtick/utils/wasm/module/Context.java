@@ -6,6 +6,8 @@ package com.shtick.utils.wasm.module;
 import java.util.HashMap;
 import java.util.LinkedList;
 
+import com.shtick.utils.wasm.module.instructions.I32Const;
+
 /**
  * @author seanmcox
  *
@@ -18,6 +20,8 @@ public class Context {
 	private LinkedList<Memory> memories = new LinkedList<>();
 	private LinkedList<Global> globals = new LinkedList<>();
 	private LinkedList<Table> tables = new LinkedList<>();
+	private LinkedList<Data> data = new LinkedList<>();
+	private int numberOfBytesStoredInMemory = 0;
 
 	private HashMap<FunctionType, TypeIndex> typeMap = new HashMap<>();
 	private HashMap<FunctionDefinition, Integer> internalFunctionIndexMap = new HashMap<>();
@@ -72,6 +76,19 @@ public class Context {
 		tableIndexMap.put(table, new TableIndex(tables.size()));
 		tables.add(table);
 	}
+
+	/**
+	 * 
+	 * @param bytes
+	 * @return The index of the first byte within the memory block.
+	 */
+	public int addData(byte[] bytes) {
+		int index = numberOfBytesStoredInMemory;
+		LinkedList<Instruction> instructions = new LinkedList<Instruction>();
+		instructions.add(new I32Const(index));
+		data.add(new Data(bytes, Data.DataMode.ACTIVE, new MemoryIndex(0), new Expression(instructions)));
+		return index;
+	}
 	
 	
 	/**
@@ -119,6 +136,12 @@ public class Context {
 		return tables;
 	}
 	
+	/**
+	 * @return the data
+	 */
+	public LinkedList<Data> getData() {
+		return data;
+	}
 
 	public FunctionIndex getFunctionIndex(FunctionDefinition functionDefinition) {
 		Integer baseIndex = internalFunctionIndexMap.get(functionDefinition);

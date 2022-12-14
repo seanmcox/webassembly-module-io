@@ -4,6 +4,8 @@
 package com.shtick.utils.wasm.module.instructions;
 
 /**
+ * @see https://webassembly.github.io/spec/core/exec/instructions.html#memory-instructions
+ * 
  * @author seanmcox
  *
  */

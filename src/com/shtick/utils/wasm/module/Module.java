@@ -58,7 +58,6 @@ public class Module {
 	 * @param dataCountMetaSections
 	 * @param codeMetaSections
 	 * @param dataMetaSections
-	 * @param dataSection
 	 * @param moduleMetaSections
 	 */
 	public Module(Context context,
@@ -73,7 +72,7 @@ public class Module {
 			LinkedList<CustomSection> elementMetaSections, ElementSection elementSection,
 			LinkedList<CustomSection> dataCountMetaSections,
 			LinkedList<CustomSection> codeMetaSections,
-			LinkedList<CustomSection> dataMetaSections, DataSection dataSection,
+			LinkedList<CustomSection> dataMetaSections,
 			LinkedList<CustomSection> moduleMetaSections) {
 		Vector<FunctionType> functionTypes = new Vector<>();
 		Vector<TypeIndex> typeIndices = new Vector<>();
@@ -97,6 +96,10 @@ public class Module {
 			globals.add(g);
 		for(Table t:context.getTables())
 			tables.add(t);
+		Vector<Data> data = new Vector<>();
+		for(Data d:context.getData())
+			data.add(d);
+		DataSection dataSection = new DataSection(null);
 		this.typeMetaSections = typeMetaSections;
 		this.typeSection = new TypeSection(functionTypes);
 		this.importMetaSections = importMetaSections;
@@ -219,14 +222,11 @@ public class Module {
 	 * @param exportSection
 	 * @param startSection
 	 * @param elementSection
-	 * @param dataSection
 	 */
-	public Module(Context context,
-			ExportSection exportSection, StartSection startSection, ElementSection elementSection,
-			DataSection dataSection) {
+	public Module(Context context, ExportSection exportSection, StartSection startSection, ElementSection elementSection) {
 		this(context, new LinkedList<>(),new LinkedList<>(),new LinkedList<>(),new LinkedList<>(),new LinkedList<>(),
 			new LinkedList<>(),new LinkedList<>(),exportSection,new LinkedList<>(),startSection,new LinkedList<>(),elementSection,
-			new LinkedList<>(),new LinkedList<>(),new LinkedList<>(),dataSection,new LinkedList<>()
+			new LinkedList<>(),new LinkedList<>(),new LinkedList<>(),new LinkedList<>()
 		);
 	}
 	
