@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      th, td {
+        text-align: left;
+      }
+    </style>
+
+    <script type="module">
+      async function init() {
+        const { instance } = await WebAssembly.instantiateStreaming(
+          fetch("./test.wasm")
+        );
+        
+        var wasmMemory8 = new Uint8Array(instance.exports.memory.buffer);
+        var wasmMemory32 = new Uint32Array(instance.exports.memory.buffer);
+        
+        const direct8 = document.getElementById("direct_8");
+        const direct32 = document.getElementById("direct_32");
+        const indirect32 = document.getElementById("indirect_32");
+        direct8.innerHTML = ""+wasmMemory8[0]+", "+wasmMemory8[1]+", "+wasmMemory8[2]+", "+wasmMemory8[3]+", "+wasmMemory8[4]+", "+wasmMemory8[5]+", "+wasmMemory8[6]+", "+wasmMemory8[7];
+        direct32.innerHTML = ""+wasmMemory32[0]+", "+wasmMemory32[1];
+        indirect32.innerHTML = ""+instance.exports.get(0)+", "+instance.exports.get(4);
+      }
+
+      init();
+    </script>
+  </head>
+  <body>
+    <div>
+      <h3>Simple subroutine call test</h3>
+      <p>Direct access, 8-bit: <span id="direct_8"></span></p>
+      <p>Direct access, 32-bit: <span id="direct_32"></span></p>
+      <p>Indirect access, 32-bit: <span id="indirect_32"></span></p>
+    </div>
+  </body>
+</html>
+

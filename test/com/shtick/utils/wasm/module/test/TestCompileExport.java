@@ -179,8 +179,7 @@ class TestCompileExport {
 		}
 		StartSection startSection = null;
 		ElementSection elementSection = new ElementSection(new Vector<>());
-		DataSection dataSection = new DataSection(new Vector<>());
-		Module module = new Module(context,exportSection,startSection,elementSection,dataSection);
+		Module module = new Module(context,exportSection,startSection,elementSection);
 		
 //		try(ByteArrayOutputStream bout = new ByteArrayOutputStream()) {
 		File outfile = new File("test_dist/export/subroutine/test.wasm");
@@ -221,14 +220,14 @@ class TestCompileExport {
 			LinkedList<Instruction> instructions = new LinkedList<>();
 			instructions.add(new LocalGet(new Index(0)));
 			instructions.add(new LocalGet(new Index(1)));
-			instructions.add(new I32Store(2,0));
+			instructions.add(new I32Store(0,0));
 			setCode = new Code(new Vector<>(), new Expression(instructions));
 		}
 		Code getCode;
 		{
 			LinkedList<Instruction> instructions = new LinkedList<>();
 			instructions.add(new LocalGet(new Index(0)));
-			instructions.add(new I32Load(2, 0));
+			instructions.add(new I32Load(0, 0));
 			getCode = new Code(new Vector<>(), new Expression(instructions));
 		}
 		FunctionDefinition functionSetExport = new FunctionDefinition(new FunctionType(new ResultType(biParamTypes), new ResultType(nullType)), setCode);

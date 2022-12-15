@@ -99,7 +99,7 @@ public class Module {
 		Vector<Data> data = new Vector<>();
 		for(Data d:context.getData())
 			data.add(d);
-		DataSection dataSection = new DataSection(null);
+		DataSection dataSection = new DataSection(data);
 		this.typeMetaSections = typeMetaSections;
 		this.typeSection = new TypeSection(functionTypes);
 		this.importMetaSections = importMetaSections;
