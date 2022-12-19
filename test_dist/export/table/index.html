@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      th, td {
+        text-align: left;
+      }
+    </style>
+
+    <script type="module">
+      async function init() {
+        const { instance } = await WebAssembly.instantiateStreaming(
+          fetch("./test.wasm")
+        );
+        
+        const fa = document.getElementById("fa");
+        const fb = document.getElementById("fb");
+        fa.innerHTML = ""+instance.exports.turnip.get(1)();
+        fb.innerHTML = ""+instance.exports.turnip.get(0)();
+      }
+
+      init();
+    </script>
+  </head>
+  <body>
+    <div>
+      <h3>Simple subroutine call test</h3>
+      <p>Should be 256: <span id="fa"></span></p>
+      <p>Should be 512: <span id="fb"></span></p>
+    </div>
+  </body>
+</html>
+

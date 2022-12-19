@@ -14,7 +14,7 @@ import java.util.Vector;
  *
  */
 public class Element {
-	public enum ElementMode { PASSIVE, ACTIVE, DECLARATIVE}
+	public enum ElementMode { PASSIVE, ACTIVE, DECLARATIVE }
 	
 	private ReferenceType type;
 	private Vector<Expression> init;

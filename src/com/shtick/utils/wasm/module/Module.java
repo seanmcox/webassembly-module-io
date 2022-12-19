@@ -59,6 +59,7 @@ public class Module {
 	 * @param codeMetaSections
 	 * @param dataMetaSections
 	 * @param moduleMetaSections
+	 * @param skipDataCount
 	 */
 	public Module(Context context,
 			LinkedList<CustomSection> typeMetaSections,
@@ -73,7 +74,7 @@ public class Module {
 			LinkedList<CustomSection> dataCountMetaSections,
 			LinkedList<CustomSection> codeMetaSections,
 			LinkedList<CustomSection> dataMetaSections,
-			LinkedList<CustomSection> moduleMetaSections) {
+			LinkedList<CustomSection> moduleMetaSections, boolean skipDataCount) {
 		Vector<FunctionType> functionTypes = new Vector<>();
 		Vector<TypeIndex> typeIndices = new Vector<>();
 		Vector<Code> codes = new Vector<>();
@@ -119,7 +120,8 @@ public class Module {
 		this.elementMetaSections = elementMetaSections;
 		this.elementSection = elementSection;
 		this.dataCountMetaSections = dataCountMetaSections;
-		this.dataCountSection = new DataCountSection(dataSection.getData().size());
+		if(!skipDataCount)
+			this.dataCountSection = new DataCountSection(dataSection.getData().size());
 		this.codeMetaSections = codeMetaSections;
 		this.codeSection = new CodeSection(codes);
 		this.dataMetaSections = dataMetaSections;
@@ -222,11 +224,12 @@ public class Module {
 	 * @param exportSection
 	 * @param startSection
 	 * @param elementSection
+	 * @param skipDataCountSection
 	 */
-	public Module(Context context, ExportSection exportSection, StartSection startSection, ElementSection elementSection) {
+	public Module(Context context, ExportSection exportSection, StartSection startSection, ElementSection elementSection, boolean skipDataCountSection) {
 		this(context, new LinkedList<>(),new LinkedList<>(),new LinkedList<>(),new LinkedList<>(),new LinkedList<>(),
 			new LinkedList<>(),new LinkedList<>(),exportSection,new LinkedList<>(),startSection,new LinkedList<>(),elementSection,
-			new LinkedList<>(),new LinkedList<>(),new LinkedList<>(),new LinkedList<>()
+			new LinkedList<>(),new LinkedList<>(),new LinkedList<>(),new LinkedList<>(), skipDataCountSection
 		);
 	}
 	

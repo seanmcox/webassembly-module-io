@@ -383,7 +383,7 @@ public class ModuleSerializer {
 				}
 			}
 		}
-		if(isSimpleIndexes)
+		if(!isSimpleIndexes)
 			encodingFlag |= 4;
 		out.write(encodingFlag);
 		if(explicitTableIndex)
