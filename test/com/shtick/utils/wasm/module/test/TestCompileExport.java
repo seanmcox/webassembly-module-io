@@ -28,7 +28,9 @@ import com.shtick.utils.wasm.module.FunctionDefinition;
 import com.shtick.utils.wasm.module.FunctionIndex;
 import com.shtick.utils.wasm.module.FunctionSection;
 import com.shtick.utils.wasm.module.FunctionType;
+import com.shtick.utils.wasm.module.Global;
 import com.shtick.utils.wasm.module.GlobalSection;
+import com.shtick.utils.wasm.module.GlobalType;
 import com.shtick.utils.wasm.module.ImportSection;
 import com.shtick.utils.wasm.module.Index;
 import com.shtick.utils.wasm.module.Instruction;
@@ -39,6 +41,7 @@ import com.shtick.utils.wasm.module.MemorySection;
 import com.shtick.utils.wasm.module.MemoryType;
 import com.shtick.utils.wasm.module.Module;
 import com.shtick.utils.wasm.module.ModuleSerializer;
+import com.shtick.utils.wasm.module.Mutability;
 import com.shtick.utils.wasm.module.ResultType;
 import com.shtick.utils.wasm.module.StartSection;
 import com.shtick.utils.wasm.module.TableSection;
@@ -198,7 +201,45 @@ class TestCompileExport {
 
 	@Test
 	void testGlobalExport() {
-		// TODO
+		Context context = new Context();
+		Global everywhereTheSame;
+		{
+			LinkedList<Instruction> instructions = new LinkedList<>();
+			instructions.add(new I32Const(23));
+			everywhereTheSame = new Global(new GlobalType(ValueType.NUMTYPE_I32, Mutability.CONSTANT), new Expression(instructions));
+		}
+		Global everywhereChanging;
+		{
+			LinkedList<Instruction> instructions = new LinkedList<>();
+			instructions.add(new I32Const(29));
+			everywhereChanging = new Global(new GlobalType(ValueType.NUMTYPE_I32, Mutability.VARIABLE), new Expression(instructions));
+		}
+		context.addGlobal(everywhereTheSame);
+		context.addGlobal(everywhereChanging);
+		
+		ExportSection exportSection;
+		{
+			Vector<Export> exports = new Vector<>();
+			exports.add(new Export("everywhere_the_same",context.getGlobalIndex(everywhereTheSame)));
+			exports.add(new Export("everywhere_changing",context.getGlobalIndex(everywhereChanging)));
+			exportSection = new ExportSection(exports);
+		}
+		StartSection startSection = null;
+		ElementSection elementSection = new ElementSection(new Vector<>());
+		Module module = new Module(context,exportSection,startSection,elementSection);
+		
+		File outfile = new File("test_dist/export/global/test.wasm");
+		try(FileOutputStream out = new FileOutputStream(outfile)) {
+			ModuleSerializer.writeModule(module, out);
+		}
+		catch(IOException t) {
+			t.printStackTrace();
+			fail("IOException thrown");
+		}
+		catch(Throwable t){
+			t.printStackTrace();
+			fail("Throwable thrown");
+		}
 	}
 
 	@Test
@@ -250,7 +291,6 @@ class TestCompileExport {
 		context.addData(new byte[] {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15});
 		Module module = new Module(context,exportSection,startSection,elementSection);
 		
-//		try(ByteArrayOutputStream bout = new ByteArrayOutputStream()) {
 		File outfile = new File("test_dist/export/memory/test.wasm");
 		try(FileOutputStream out = new FileOutputStream(outfile)) {
 			ModuleSerializer.writeModule(module, out);

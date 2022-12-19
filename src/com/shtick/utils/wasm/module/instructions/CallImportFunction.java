@@ -4,7 +4,6 @@
 package com.shtick.utils.wasm.module.instructions;
 
 import com.shtick.utils.wasm.module.Context;
-import com.shtick.utils.wasm.module.FunctionDefinition;
 import com.shtick.utils.wasm.module.FunctionIndex;
 import com.shtick.utils.wasm.module.Import;
 import com.shtick.utils.wasm.module.Instruction;

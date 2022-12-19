@@ -7,6 +7,11 @@ import com.shtick.utils.wasm.module.FunctionIndex;
 import com.shtick.utils.wasm.module.Instruction;
 
 /**
+ * A straightforward implementation of the Call instruction, but probably not practical for most compilation tasks.
+ * 
+ * @see CallByFunctionDefinition
+ * @see CallByImportFunction
+ * 
  * @author seanmcox
  *
  */

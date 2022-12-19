@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      th, td {
+        text-align: left;
+      }
+    </style>
+
+    <script type="module">
+      async function init() {
+        const { instance } = await WebAssembly.instantiateStreaming(
+          fetch("./test.wasm")
+        );
+        
+        const constant = document.getElementById("const");
+        const var1 = document.getElementById("var1");
+        const var2 = document.getElementById("var2");
+        constant.innerHTML = ""+instance.exports.everywhere_the_same;
+        var1.innerHTML = ""+instance.exports.everywhere_changing;
+        instance.exports.everywhere_changing.value = 65536;
+        var2.innerHTML = ""+instance.exports.everywhere_changing;
+      }
+
+      init();
+    </script>
+  </head>
+  <body>
+    <div>
+      <h3>Simple subroutine call test</h3>
+      <p>const value: <span id="const"></span></p>
+      <p>var value: <span id="var1"></span></p>
+      <p>changed var value: <span id="var2"></span></p>
+    </div>
+  </body>
+</html>
+
