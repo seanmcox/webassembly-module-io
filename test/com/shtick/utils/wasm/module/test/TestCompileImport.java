@@ -26,6 +26,9 @@ import com.shtick.utils.wasm.module.Import;
 import com.shtick.utils.wasm.module.ImportDescriptor;
 import com.shtick.utils.wasm.module.Index;
 import com.shtick.utils.wasm.module.Instruction;
+import com.shtick.utils.wasm.module.Limits;
+import com.shtick.utils.wasm.module.Memory;
+import com.shtick.utils.wasm.module.MemoryType;
 import com.shtick.utils.wasm.module.Module;
 import com.shtick.utils.wasm.module.ModuleSerializer;
 import com.shtick.utils.wasm.module.Mutability;
@@ -38,6 +41,8 @@ import com.shtick.utils.wasm.module.instructions.CallByFunctionDefinition;
 import com.shtick.utils.wasm.module.instructions.CallImportFunction;
 import com.shtick.utils.wasm.module.instructions.GlobalGet;
 import com.shtick.utils.wasm.module.instructions.I32Add;
+import com.shtick.utils.wasm.module.instructions.I32Load;
+import com.shtick.utils.wasm.module.instructions.I32Store;
 import com.shtick.utils.wasm.module.instructions.I32Sub;
 import com.shtick.utils.wasm.module.instructions.If;
 import com.shtick.utils.wasm.module.instructions.LocalGet;
@@ -185,7 +190,62 @@ class TestCompileImport {
 
 	@Test
 	void testMemoryImport() {
-		// TODO
+		Vector<ValueType> triParamTypes = new Vector<>();
+		triParamTypes.add(ValueType.NUMTYPE_I32);
+		triParamTypes.add(ValueType.NUMTYPE_I32);
+		triParamTypes.add(ValueType.NUMTYPE_I32);
+		Vector<ValueType> biParamTypes = new Vector<>();
+		biParamTypes.add(ValueType.NUMTYPE_I32);
+		biParamTypes.add(ValueType.NUMTYPE_I32);
+		Vector<ValueType> monoType = new Vector<>();
+		monoType.add(ValueType.NUMTYPE_I32);
+		Vector<ValueType> nullType = new Vector<>();
+
+		Context context = new Context();
+		Code setCode;
+		{
+			LinkedList<Instruction> instructions = new LinkedList<>();
+			instructions.add(new LocalGet(new Index(0)));
+			instructions.add(new LocalGet(new Index(1)));
+			instructions.add(new I32Store(0,0));
+			setCode = new Code(new Vector<>(), new Expression(instructions));
+		}
+		Code getCode;
+		{
+			LinkedList<Instruction> instructions = new LinkedList<>();
+			instructions.add(new LocalGet(new Index(0)));
+			instructions.add(new I32Load(0, 0));
+			getCode = new Code(new Vector<>(), new Expression(instructions));
+		}
+		FunctionDefinition functionSetExport = new FunctionDefinition(new FunctionType(new ResultType(biParamTypes), new ResultType(nullType)), setCode);
+		FunctionDefinition functionGetExport = new FunctionDefinition(new FunctionType(new ResultType(monoType), new ResultType(monoType)), getCode);
+		context.addFunctionDefinition(functionSetExport);
+		context.addFunctionDefinition(functionGetExport);
+		context.addNonFunctionImport(new Import("module", "memory", new MemoryType(new Limits(1, 1))));
+		
+		ExportSection exportSection;
+		{
+			Vector<Export> exports = new Vector<>();
+			exports.add(new Export("set",context.getFunctionIndex(functionSetExport)));
+			exports.add(new Export("get",context.getFunctionIndex(functionGetExport)));
+			exportSection = new ExportSection(exports);
+		}
+		StartSection startSection = null;
+		ElementSection elementSection = new ElementSection(new Vector<>());
+		Module module = new Module(context,exportSection,startSection,elementSection,false);
+		
+		File outfile = new File("test_dist/import/memory/test.wasm");
+		try(FileOutputStream out = new FileOutputStream(outfile)) {
+			ModuleSerializer.writeModule(module, out);
+		}
+		catch(IOException t) {
+			t.printStackTrace();
+			fail("IOException thrown");
+		}
+		catch(Throwable t){
+			t.printStackTrace();
+			fail("Throwable thrown");
+		}
 	}
 
 	@Test

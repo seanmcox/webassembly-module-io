@@ -9,13 +9,24 @@
 
     <script type="module">
       async function init() {
+		const memory = new WebAssembly.Memory({initial:1, maximum:1});
+		var importObject = {
+			module: {
+				memory: memory,
+			},
+		};
         const { instance } = await WebAssembly.instantiateStreaming(
-          fetch("./test.wasm")
+          fetch("./test.wasm"),
+          importObject
         );
         
-        var wasmMemory8 = new Uint8Array(instance.exports.memory.buffer);
-        var wasmMemory32 = new Uint32Array(instance.exports.memory.buffer);
+        var wasmMemory8 = new Uint8Array(memory.buffer);
+        var wasmMemory32 = new Uint32Array(memory.buffer);
         
+		for (let i = 0; i < 16; i++) {
+			wasmMemory8[i] = i;
+		}
+
         const direct8 = document.getElementById("direct_8");
         const direct32 = document.getElementById("direct_32");
         const indirect32 = document.getElementById("indirect_32");
