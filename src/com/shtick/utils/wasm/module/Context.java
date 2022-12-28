@@ -16,6 +16,7 @@ public class Context {
 	private LinkedList<FunctionDefinition> functionDefinitions = new LinkedList<>();
 	private LinkedList<FunctionType> functionTypes = new LinkedList<>();
 	private LinkedList<Import> functionImports = new LinkedList<>();
+	private LinkedList<Import> globalImports = new LinkedList<>();
 	private LinkedList<Import> otherImports = new LinkedList<>();
 	private LinkedList<Memory> memories = new LinkedList<>();
 	private LinkedList<Global> globals = new LinkedList<>();
@@ -27,7 +28,8 @@ public class Context {
 	private HashMap<FunctionDefinition, Integer> internalFunctionIndexMap = new HashMap<>();
 	private HashMap<Import, Integer> importFunctionIndexMap = new HashMap<>();
 	private HashMap<Memory, MemoryIndex> memoryIndexMap = new HashMap<>();
-	private HashMap<Global, GlobalIndex> globalIndexMap = new HashMap<>();
+	private HashMap<Global, Integer> internalGlobalIndexMap = new HashMap<>();
+	private HashMap<Import, Integer> importGlobalIndexMap = new HashMap<>();
 	private HashMap<Table, TableIndex> tableIndexMap = new HashMap<>();
 	
 	/**
@@ -53,6 +55,11 @@ public class Context {
 	public void addNonFunctionImport(Import imp) {
 		if(imp.getImportDescriptor() instanceof TypeIndex)
 			throw new RuntimeException("Function imports cannot be added through addNonFunctionImport().");
+		if(imp.getImportDescriptor() instanceof GlobalType) {
+			importGlobalIndexMap.put(imp, globalImports.size());
+			globalImports.add(imp);
+			return;
+		}
 		otherImports.add(imp);
 	}
 
@@ -66,7 +73,7 @@ public class Context {
 	public void addGlobal(Global global) {
 		if(getGlobalIndex(global)!=null)
 			return;
-		globalIndexMap.put(global, new GlobalIndex(globals.size()));
+		internalGlobalIndexMap.put(global, globals.size());
 		globals.add(global);
 	}
 
@@ -111,6 +118,7 @@ public class Context {
 	 */
 	public LinkedList<Import> getImports() {
 		LinkedList<Import> retval = new LinkedList<>(functionImports);
+		retval.addAll(globalImports);
 		retval.addAll(otherImports);
 		return retval;
 	}
@@ -151,7 +159,10 @@ public class Context {
 	}
 	
 	public FunctionIndex getFunctionIndex(Import imp) {
-		return new FunctionIndex(importFunctionIndexMap.get(imp));
+		Integer i = importFunctionIndexMap.get(imp);
+		if(i==null)
+			throw new IndexOutOfBoundsException();
+		return new FunctionIndex(i);
 	}
 	
 	/**
@@ -173,7 +184,17 @@ public class Context {
 	}
 	
 	public GlobalIndex getGlobalIndex(Global global) {
-		return globalIndexMap.get(global);
+		Integer baseIndex = internalGlobalIndexMap.get(global);
+		if(baseIndex==null)
+			return null;
+		return new GlobalIndex(baseIndex+globalImports.size());
+	}
+	
+	public GlobalIndex getGlobalIndex(Import imp) {
+		Integer i = importGlobalIndexMap.get(imp);
+		if(i==null)
+			return null;
+		return new GlobalIndex(i);
 	}
 	
 	public TableIndex getTableIndex(Table table) {

@@ -5,7 +5,6 @@ package com.shtick.utils.wasm.module.test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -15,35 +14,29 @@ import java.util.Vector;
 import org.junit.jupiter.api.Test;
 
 import com.shtick.utils.wasm.module.Code;
-import com.shtick.utils.wasm.module.CodeSection;
 import com.shtick.utils.wasm.module.Context;
-import com.shtick.utils.wasm.module.DataSection;
 import com.shtick.utils.wasm.module.ElementSection;
 import com.shtick.utils.wasm.module.Export;
 import com.shtick.utils.wasm.module.ExportSection;
 import com.shtick.utils.wasm.module.Expression;
 import com.shtick.utils.wasm.module.FunctionDefinition;
-import com.shtick.utils.wasm.module.FunctionIndex;
-import com.shtick.utils.wasm.module.FunctionSection;
 import com.shtick.utils.wasm.module.FunctionType;
-import com.shtick.utils.wasm.module.GlobalSection;
+import com.shtick.utils.wasm.module.GlobalType;
 import com.shtick.utils.wasm.module.Import;
 import com.shtick.utils.wasm.module.ImportDescriptor;
-import com.shtick.utils.wasm.module.ImportSection;
 import com.shtick.utils.wasm.module.Index;
 import com.shtick.utils.wasm.module.Instruction;
-import com.shtick.utils.wasm.module.MemorySection;
 import com.shtick.utils.wasm.module.Module;
 import com.shtick.utils.wasm.module.ModuleSerializer;
+import com.shtick.utils.wasm.module.Mutability;
 import com.shtick.utils.wasm.module.ResultType;
 import com.shtick.utils.wasm.module.StartSection;
-import com.shtick.utils.wasm.module.TableSection;
-import com.shtick.utils.wasm.module.TypeIndex;
-import com.shtick.utils.wasm.module.TypeSection;
 import com.shtick.utils.wasm.module.ValueType;
+import com.shtick.utils.wasm.module.ValueTypeInterface;
 import com.shtick.utils.wasm.module.instructions.BlockTypeIndex;
 import com.shtick.utils.wasm.module.instructions.CallByFunctionDefinition;
 import com.shtick.utils.wasm.module.instructions.CallImportFunction;
+import com.shtick.utils.wasm.module.instructions.GlobalGet;
 import com.shtick.utils.wasm.module.instructions.I32Add;
 import com.shtick.utils.wasm.module.instructions.I32Sub;
 import com.shtick.utils.wasm.module.instructions.If;
@@ -117,13 +110,8 @@ class TestCompileImport {
 		}
 		StartSection startSection = null;
 		ElementSection elementSection = new ElementSection(new Vector<>());
-		DataSection dataSection = new DataSection(new Vector<>());
-		Module module = new Module(
-			context,exportSection,startSection,elementSection,
-			dataSection
-		);
+		Module module = new Module(context,exportSection,startSection,elementSection,false);
 		
-//		try(ByteArrayOutputStream bout = new ByteArrayOutputStream()) {
 		File outfile = new File("test_dist/import/function/test.wasm");
 		try(FileOutputStream out = new FileOutputStream(outfile)) {
 			ModuleSerializer.writeModule(module, out);
@@ -140,7 +128,59 @@ class TestCompileImport {
 
 	@Test
 	void testGlobalImport() {
-		// TODO
+		Vector<ValueType> resultTypes = new Vector<>();
+		resultTypes.add(ValueType.NUMTYPE_I32);
+		FunctionType getIntType = new FunctionType(new ResultType(new Vector<>()), new ResultType(resultTypes));
+
+		Context context = new Context();
+		Import dexterImport = new Import("mod", "dexter", new GlobalType(ValueType.NUMTYPE_I32 ,Mutability.CONSTANT));
+		Import sinisterImport = new Import("mod", "sinister", new GlobalType(ValueType.NUMTYPE_I32 ,Mutability.VARIABLE));
+		context.addNonFunctionImport(dexterImport);
+		context.addNonFunctionImport(sinisterImport);
+
+		FunctionDefinition getDexter;
+		{
+			LinkedList<Instruction> instructions = new LinkedList<>();
+			instructions.add(new GlobalGet(context.getGlobalIndex(dexterImport)));
+			Code code = new Code(new Vector<>(), new Expression(instructions));
+			getDexter = new FunctionDefinition(getIntType, code);
+		}
+		context.addFunctionDefinition(getDexter);
+		FunctionDefinition getSinister;
+		{
+			LinkedList<Instruction> instructions = new LinkedList<>();
+			instructions.add(new GlobalGet(context.getGlobalIndex(sinisterImport)));
+			Code code = new Code(new Vector<>(), new Expression(instructions));
+			getSinister = new FunctionDefinition(getIntType, code);
+		}
+		context.addFunctionDefinition(getSinister);
+		
+		// TODO Add an internal global to the test to verify that the index is being calculated correctly.
+		
+		// See: https://webassembly.github.io/spec/core/binary/modules.html#binary-funcsec
+		ExportSection exportSection;
+		{
+			Vector<Export> exports = new Vector<>();
+			exports.add(new Export("getDexter",context.getFunctionIndex(getDexter)));
+			exports.add(new Export("getSinister",context.getFunctionIndex(getSinister)));
+			exportSection = new ExportSection(exports);
+		}
+		StartSection startSection = null;
+		ElementSection elementSection = new ElementSection(new Vector<>());
+		Module module = new Module(context,exportSection,startSection,elementSection,false);
+		
+		File outfile = new File("test_dist/import/global/test.wasm");
+		try(FileOutputStream out = new FileOutputStream(outfile)) {
+			ModuleSerializer.writeModule(module, out);
+		}
+		catch(IOException t) {
+			t.printStackTrace();
+			fail("IOException thrown");
+		}
+		catch(Throwable t){
+			t.printStackTrace();
+			fail("Throwable thrown");
+		}
 	}
 
 	@Test

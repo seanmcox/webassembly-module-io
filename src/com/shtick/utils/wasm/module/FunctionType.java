@@ -3,8 +3,6 @@
  */
 package com.shtick.utils.wasm.module;
 
-import java.util.Objects;
-
 /**
  * See: https://webassembly.github.io/spec/core/binary/types.html#binary-functype
  * 

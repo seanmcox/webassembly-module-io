@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      th, td {
+        text-align: left;
+      }
+    </style>
+
+    <script type="module">
+	async function init() {
+		// This could just be the number 32, but, apparently, if we want a mutable global, WebAssembly.Global needs to be used.
+		const globalDexter = new WebAssembly.Global({value:'i32', mutable:false}, 32);
+		const globalSinister = new WebAssembly.Global({value:'i32', mutable:true}, 128);
+		var importObject = {
+			mod: {
+				dexter: globalDexter,
+				sinister: globalSinister,
+			},
+		};
+		const { instance } = await WebAssembly.instantiateStreaming(
+			fetch("./test.wasm"),
+			importObject
+		);
+        
+		const dexter = document.getElementById("dexter");
+		const sinister = document.getElementById("sinister");
+		const sinister2 = document.getElementById("sinister2");
+		dexter.innerHTML = ""+instance.exports.getDexter();
+		sinister.innerHTML = ""+instance.exports.getSinister();
+		globalSinister.value = 65536;
+		sinister2.innerHTML = ""+instance.exports.getSinister();
+	}
+
+      init();
+    </script>
+  </head>
+  <body>
+    <div>
+      <h3>Simple imported function test</h3>
+      <p>dexter = <span id="dexter"></span> <em>(Should be 32)</em></p>
+      <p>sinister = <span id="sinister"></span> <em>(Should be 128)</em></p>
+      <p>sinister modified = <span id="sinister2"></span> <em>(Should be 65536)</em></p>
+    </div>
+  </body>
+</html>
+
