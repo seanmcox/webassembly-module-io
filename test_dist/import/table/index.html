@@ -9,14 +9,21 @@
 
     <script type="module">
       async function init() {
+		const table = new WebAssembly.Table({ initial: 2, element: "anyfunc" });
+		var importObject = {
+			module: {
+				table: table,
+			},
+		};
         const { instance } = await WebAssembly.instantiateStreaming(
-          fetch("./test.wasm")
+          fetch("./test.wasm"),
+          importObject
         );
         
         const fa = document.getElementById("fa");
         const fb = document.getElementById("fb");
-        fa.innerHTML = ""+instance.exports.turnip.get(1)();
-        fb.innerHTML = ""+instance.exports.turnip.get(0)();
+        fa.innerHTML = ""+table.get(1)();
+        fb.innerHTML = ""+table.get(0)();
       }
 
       init();
@@ -24,7 +31,7 @@
   </head>
   <body>
     <div>
-      <h3>Table Export Test</h3>
+      <h3>Table Import Test</h3>
       <p>Should be 256: <span id="fa"></span></p>
       <p>Should be 512: <span id="fb"></span></p>
     </div>

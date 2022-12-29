@@ -17,6 +17,7 @@ public class Context {
 	private LinkedList<FunctionType> functionTypes = new LinkedList<>();
 	private LinkedList<Import> functionImports = new LinkedList<>();
 	private LinkedList<Import> globalImports = new LinkedList<>();
+	private LinkedList<Import> tableImports = new LinkedList<>();
 	private LinkedList<Import> otherImports = new LinkedList<>();
 	private LinkedList<Memory> memories = new LinkedList<>();
 	private LinkedList<Global> globals = new LinkedList<>();
@@ -30,7 +31,8 @@ public class Context {
 	private HashMap<Memory, MemoryIndex> memoryIndexMap = new HashMap<>();
 	private HashMap<Global, Integer> internalGlobalIndexMap = new HashMap<>();
 	private HashMap<Import, Integer> importGlobalIndexMap = new HashMap<>();
-	private HashMap<Table, TableIndex> tableIndexMap = new HashMap<>();
+	private HashMap<Table, Integer> internalTableIndexMap = new HashMap<>();
+	private HashMap<Import, Integer> importTableIndexMap = new HashMap<>();
 	
 	/**
 	 * Adds the function to the context, setting its index value, as well as the index value for its function type (if not already defined).
@@ -60,6 +62,11 @@ public class Context {
 			globalImports.add(imp);
 			return;
 		}
+		if(imp.getImportDescriptor() instanceof TableType) {
+			importTableIndexMap.put(imp, tableImports.size());
+			tableImports.add(imp);
+			return;
+		}
 		otherImports.add(imp);
 	}
 
@@ -80,7 +87,7 @@ public class Context {
 	public void addTable(Table table) {
 		if(getTableIndex(table)!=null)
 			return;
-		tableIndexMap.put(table, new TableIndex(tables.size()));
+		internalTableIndexMap.put(table, tables.size());
 		tables.add(table);
 	}
 
@@ -119,6 +126,7 @@ public class Context {
 	public LinkedList<Import> getImports() {
 		LinkedList<Import> retval = new LinkedList<>(functionImports);
 		retval.addAll(globalImports);
+		retval.addAll(tableImports);
 		retval.addAll(otherImports);
 		return retval;
 	}
@@ -198,6 +206,16 @@ public class Context {
 	}
 	
 	public TableIndex getTableIndex(Table table) {
-		return tableIndexMap.get(table);
+		Integer baseIndex = internalTableIndexMap.get(table);
+		if(baseIndex==null)
+			return null;
+		return new TableIndex(baseIndex+tableImports.size());
+	}
+	
+	public TableIndex getTableIndex(Import imp) {
+		Integer i = importTableIndexMap.get(imp);
+		if(i==null)
+			return null;
+		return new TableIndex(i);
 	}
 }

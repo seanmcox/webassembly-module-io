@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 
 import com.shtick.utils.wasm.module.Code;
 import com.shtick.utils.wasm.module.Context;
+import com.shtick.utils.wasm.module.Element;
 import com.shtick.utils.wasm.module.ElementSection;
 import com.shtick.utils.wasm.module.Export;
 import com.shtick.utils.wasm.module.ExportSection;
@@ -32,20 +33,26 @@ import com.shtick.utils.wasm.module.MemoryType;
 import com.shtick.utils.wasm.module.Module;
 import com.shtick.utils.wasm.module.ModuleSerializer;
 import com.shtick.utils.wasm.module.Mutability;
+import com.shtick.utils.wasm.module.ReferenceType;
 import com.shtick.utils.wasm.module.ResultType;
 import com.shtick.utils.wasm.module.StartSection;
+import com.shtick.utils.wasm.module.Table;
+import com.shtick.utils.wasm.module.TableType;
 import com.shtick.utils.wasm.module.ValueType;
 import com.shtick.utils.wasm.module.ValueTypeInterface;
+import com.shtick.utils.wasm.module.Element.ElementMode;
 import com.shtick.utils.wasm.module.instructions.BlockTypeIndex;
 import com.shtick.utils.wasm.module.instructions.CallByFunctionDefinition;
 import com.shtick.utils.wasm.module.instructions.CallImportFunction;
 import com.shtick.utils.wasm.module.instructions.GlobalGet;
 import com.shtick.utils.wasm.module.instructions.I32Add;
+import com.shtick.utils.wasm.module.instructions.I32Const;
 import com.shtick.utils.wasm.module.instructions.I32Load;
 import com.shtick.utils.wasm.module.instructions.I32Store;
 import com.shtick.utils.wasm.module.instructions.I32Sub;
 import com.shtick.utils.wasm.module.instructions.If;
 import com.shtick.utils.wasm.module.instructions.LocalGet;
+import com.shtick.utils.wasm.module.instructions.ReferenceFunction;
 
 /**
  * @author seanmcox
@@ -250,6 +257,73 @@ class TestCompileImport {
 
 	@Test
 	void testTableImport() {
-		// TODO
+		Vector<ValueType> triParamTypes = new Vector<>();
+		triParamTypes.add(ValueType.NUMTYPE_I32);
+		triParamTypes.add(ValueType.NUMTYPE_I32);
+		triParamTypes.add(ValueType.NUMTYPE_I32);
+		Vector<ValueType> biParamTypes = new Vector<>();
+		biParamTypes.add(ValueType.NUMTYPE_I32);
+		biParamTypes.add(ValueType.NUMTYPE_I32);
+		Vector<ValueType> monoType = new Vector<>();
+		monoType.add(ValueType.NUMTYPE_I32);
+		Vector<ValueType> nullType = new Vector<>();
+
+		Context context = new Context();
+		Code aCode;
+		{
+			LinkedList<Instruction> instructions = new LinkedList<>();
+			instructions.add(new I32Const(256));
+			aCode = new Code(new Vector<>(), new Expression(instructions));
+		}
+		Code bCode;
+		{
+			LinkedList<Instruction> instructions = new LinkedList<>();
+			instructions.add(new I32Const(512));
+			bCode = new Code(new Vector<>(), new Expression(instructions));
+		}
+		FunctionDefinition functionAExport = new FunctionDefinition(new FunctionType(new ResultType(nullType), new ResultType(monoType)), aCode);
+		FunctionDefinition functionBExport = new FunctionDefinition(new FunctionType(new ResultType(nullType), new ResultType(monoType)), bCode);
+		context.addFunctionDefinition(functionAExport);
+		context.addFunctionDefinition(functionBExport);
+		Import tableImport = new Import("module", "table", new TableType(ReferenceType.REFTYPE_FUNCREF, new Limits(2, -1)));
+		context.addNonFunctionImport(tableImport);
+		
+		ExportSection exportSection = new ExportSection(new Vector<>());
+		StartSection startSection = null;
+		ElementSection elementSection;
+		{
+			Vector<Element> elements = new Vector<>();
+			{
+				Vector<Expression> expressions = new Vector<>();
+				LinkedList<Instruction> zero = new LinkedList<>();
+				zero.add(new I32Const(0));
+				{
+					LinkedList<Instruction> instructions = new LinkedList<>();
+					instructions.add(new ReferenceFunction(context.getFunctionIndex(functionBExport)));
+					expressions.add(new Expression(instructions));
+				}
+				{
+					LinkedList<Instruction> instructions = new LinkedList<>();
+					instructions.add(new ReferenceFunction(context.getFunctionIndex(functionAExport)));
+					expressions.add(new Expression(instructions));
+				}
+				elements.add(new Element(ReferenceType.REFTYPE_FUNCREF, expressions, ElementMode.ACTIVE, context.getTableIndex(tableImport), new Expression(zero)));
+			}
+			elementSection = new ElementSection(elements);
+		}
+		Module module = new Module(context,exportSection,startSection,elementSection,false);
+		
+		File outfile = new File("test_dist/import/table/test.wasm");
+		try(FileOutputStream out = new FileOutputStream(outfile)) {
+			ModuleSerializer.writeModule(module, out);
+		}
+		catch(IOException t) {
+			t.printStackTrace();
+			fail("IOException thrown");
+		}
+		catch(Throwable t){
+			t.printStackTrace();
+			fail("Throwable thrown");
+		}
 	}
 }
