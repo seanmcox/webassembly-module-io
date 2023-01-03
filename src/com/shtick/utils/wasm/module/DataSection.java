@@ -10,7 +10,7 @@ import java.util.Vector;
  * @author seanmcox
  *
  */
-public class DataSection {
+public class DataSection extends Section{
 	private Vector<Data> data;
 
 	/**

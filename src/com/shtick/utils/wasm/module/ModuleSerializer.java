@@ -2118,7 +2118,7 @@ public class ModuleSerializer {
 		} while(value != 0);
 	}
 	
-	private static int getUnsignedLEB128Size(long value) {
+	protected static int getUnsignedLEB128Size(long value) {
 		int byteCount = 0;
 		do {
 			value >>>= 7;

@@ -22,7 +22,7 @@ public class Data {
 	/**
 	 * @param data
 	 * @param dataMode
-	 * @param memoryIndex Ignored/meaningless for passive data mode. However, also, should always be 0 because the current specification for WebAssembly only allows for one usable memory segment.
+	 * @param memoryIndex Ignored/meaningless for passive data mode. However, also, SHOULD always be 0 because the current specification for WebAssembly only allows for one usable memory segment.
 	 * @param expression
 	 */
 	public Data(byte[] data, DataMode dataMode, MemoryIndex memoryIndex, Expression expression) {

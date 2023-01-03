@@ -41,6 +41,7 @@ public class Module {
 	private LinkedList<CustomSection> moduleMetaSections;
 	
 	/**
+	 * One of two constructors that should most frequently be used. This constructor enables the various "meta" sections to be populated.
 	 * 
 	 * @param context An object containing ordered definitions. The orders will be preserved, so that indexes into these definitions will be the same as the final indexes. 
 	 * @param typeMetaSections
@@ -128,34 +129,38 @@ public class Module {
 		this.dataSection = dataSection;
 		this.moduleMetaSections = moduleMetaSections;
 	}
-	
+
 	/**
+	 * This constructor is really only useful for deserialization.
+	 * The dataCountSection should be constructed based on the contents of the dataSection normally.
+	 * 
 	 * @param typeMetaSections
-	 * @param typeSections
+	 * @param typeSection
 	 * @param importMetaSections
-	 * @param importSections
+	 * @param importSection
 	 * @param functionMetaSections
-	 * @param functionSections
+	 * @param functionSection
 	 * @param tableMetaSections
-	 * @param tableSections
+	 * @param tableSection
 	 * @param memoryMetaSections
-	 * @param memorySections
+	 * @param memorySection
 	 * @param globalMetaSections
-	 * @param globalSections
+	 * @param globalSection
 	 * @param exportMetaSections
-	 * @param exportSections
+	 * @param exportSection
 	 * @param startMetaSections
 	 * @param startSection
 	 * @param elementMetaSections
-	 * @param elementSections
+	 * @param elementSection
 	 * @param dataCountMetaSections
+	 * @param dataCountSection
 	 * @param codeMetaSections
-	 * @param codeSections
+	 * @param codeSection
 	 * @param dataMetaSections
-	 * @param dataSections
+	 * @param dataSection
 	 * @param moduleMetaSections
 	 */
-	public Module(LinkedList<CustomSection> typeMetaSections, TypeSection typeSection,
+	protected Module(LinkedList<CustomSection> typeMetaSections, TypeSection typeSection,
 			LinkedList<CustomSection> importMetaSections, ImportSection importSection,
 			LinkedList<CustomSection> functionMetaSections, FunctionSection functionSection,
 			LinkedList<CustomSection> tableMetaSections, TableSection tableSection,
@@ -164,7 +169,7 @@ public class Module {
 			LinkedList<CustomSection> exportMetaSections, ExportSection exportSection,
 			LinkedList<CustomSection> startMetaSections, StartSection startSection,
 			LinkedList<CustomSection> elementMetaSections, ElementSection elementSection,
-			LinkedList<CustomSection> dataCountMetaSections,
+			LinkedList<CustomSection> dataCountMetaSections, DataCountSection dataCountSection,
 			LinkedList<CustomSection> codeMetaSections, CodeSection codeSection,
 			LinkedList<CustomSection> dataMetaSections, DataSection dataSection,
 			LinkedList<CustomSection> moduleMetaSections) {
@@ -187,12 +192,61 @@ public class Module {
 		this.elementMetaSections = elementMetaSections;
 		this.elementSection = elementSection;
 		this.dataCountMetaSections = dataCountMetaSections;
-		this.dataCountSection = new DataCountSection(dataSection.getData().size());
+		this.dataCountSection = dataCountSection;
 		this.codeMetaSections = codeMetaSections;
 		this.codeSection = codeSection;
 		this.dataMetaSections = dataMetaSections;
 		this.dataSection = dataSection;
 		this.moduleMetaSections = moduleMetaSections;
+	}
+
+	/**
+	 * 
+	 * @param typeMetaSections
+	 * @param typeSection
+	 * @param importMetaSections
+	 * @param importSection
+	 * @param functionMetaSections
+	 * @param functionSection
+	 * @param tableMetaSections
+	 * @param tableSection
+	 * @param memoryMetaSections
+	 * @param memorySection
+	 * @param globalMetaSections
+	 * @param globalSection
+	 * @param exportMetaSections
+	 * @param exportSection
+	 * @param startMetaSections
+	 * @param startSection
+	 * @param elementMetaSections
+	 * @param elementSection
+	 * @param dataCountMetaSections
+	 * @param codeMetaSections
+	 * @param codeSection
+	 * @param dataMetaSections
+	 * @param dataSection
+	 * @param moduleMetaSections
+	 */
+	public Module(LinkedList<CustomSection> typeMetaSections, TypeSection typeSection,
+			LinkedList<CustomSection> importMetaSections, ImportSection importSection,
+			LinkedList<CustomSection> functionMetaSections, FunctionSection functionSection,
+			LinkedList<CustomSection> tableMetaSections, TableSection tableSection,
+			LinkedList<CustomSection> memoryMetaSections, MemorySection memorySection,
+			LinkedList<CustomSection> globalMetaSections, GlobalSection globalSection,
+			LinkedList<CustomSection> exportMetaSections, ExportSection exportSection,
+			LinkedList<CustomSection> startMetaSections, StartSection startSection,
+			LinkedList<CustomSection> elementMetaSections, ElementSection elementSection,
+			LinkedList<CustomSection> dataCountMetaSections,
+			LinkedList<CustomSection> codeMetaSections, CodeSection codeSection,
+			LinkedList<CustomSection> dataMetaSections, DataSection dataSection,
+			LinkedList<CustomSection> moduleMetaSections) {
+		this(
+				typeMetaSections, typeSection, importMetaSections, importSection, functionMetaSections, functionSection,
+				tableMetaSections, tableSection, memoryMetaSections, memorySection, globalMetaSections, globalSection,
+				exportMetaSections, exportSection, startMetaSections, startSection, elementMetaSections, elementSection,
+				dataCountMetaSections, new DataCountSection(dataSection.getData().size()), codeMetaSections, codeSection,
+				dataMetaSections, dataSection, moduleMetaSections
+		);
 	}
 
 	/**
@@ -219,6 +273,7 @@ public class Module {
 	}
 
 	/**
+	 * One of two constructors that should most frequently be used. This is the simplest one, which assumes that the various "meta" sections will be empty.
 	 * 
 	 * @param context
 	 * @param exportSection
