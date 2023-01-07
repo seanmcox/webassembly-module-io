@@ -3,8 +3,6 @@
  */
 package com.shtick.utils.wasm.module.instructions;
 
-import java.util.Vector;
-
 import com.shtick.utils.wasm.module.Context;
 import com.shtick.utils.wasm.module.FunctionType;
 
