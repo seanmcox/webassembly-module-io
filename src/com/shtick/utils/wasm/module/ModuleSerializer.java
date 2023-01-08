@@ -555,10 +555,6 @@ public class ModuleSerializer {
 				writeVector(valueTypes, ModuleSerializer::writeValueType, out);
 			}
 		}
-		else if(datum instanceof ReferenceFunction) {
-			out.write(0x0D2);
-			writeIndex(((ReferenceFunction)datum).getFunctionIndex(), out);
-		}
 		// Variable Instructions
 		else if(datum instanceof LocalGet) {
 			out.write(0x020);

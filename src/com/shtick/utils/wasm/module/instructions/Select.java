@@ -5,13 +5,14 @@ package com.shtick.utils.wasm.module.instructions;
 
 import java.util.Vector;
 
+import com.shtick.utils.wasm.module.Instruction;
 import com.shtick.utils.wasm.module.ValueType;
 
 /**
  * @author seanmcox
  *
  */
-public class Select {
+public class Select implements Instruction {
 	private Vector<ValueType> valueTypes;
 
 	/**

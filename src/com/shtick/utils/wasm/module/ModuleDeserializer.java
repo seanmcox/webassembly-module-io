@@ -18,9 +18,33 @@ import com.shtick.utils.wasm.module.instructions.BlockType;
 import com.shtick.utils.wasm.module.instructions.BlockTypeEmpty;
 import com.shtick.utils.wasm.module.instructions.BlockTypeIndex;
 import com.shtick.utils.wasm.module.instructions.BlockTypeValueType;
+import com.shtick.utils.wasm.module.instructions.Branch;
+import com.shtick.utils.wasm.module.instructions.BranchIf;
+import com.shtick.utils.wasm.module.instructions.BranchTable;
+import com.shtick.utils.wasm.module.instructions.CallByIndex;
+import com.shtick.utils.wasm.module.instructions.CallIndirect;
+import com.shtick.utils.wasm.module.instructions.Drop;
+import com.shtick.utils.wasm.module.instructions.ElementDrop;
+import com.shtick.utils.wasm.module.instructions.GlobalGet;
+import com.shtick.utils.wasm.module.instructions.GlobalSet;
 import com.shtick.utils.wasm.module.instructions.If;
+import com.shtick.utils.wasm.module.instructions.LocalGet;
+import com.shtick.utils.wasm.module.instructions.LocalSet;
+import com.shtick.utils.wasm.module.instructions.LocalTee;
 import com.shtick.utils.wasm.module.instructions.Loop;
 import com.shtick.utils.wasm.module.instructions.Nop;
+import com.shtick.utils.wasm.module.instructions.ReferenceFunction;
+import com.shtick.utils.wasm.module.instructions.ReferenceIsNull;
+import com.shtick.utils.wasm.module.instructions.ReferenceNull;
+import com.shtick.utils.wasm.module.instructions.Return;
+import com.shtick.utils.wasm.module.instructions.Select;
+import com.shtick.utils.wasm.module.instructions.TableCopy;
+import com.shtick.utils.wasm.module.instructions.TableFill;
+import com.shtick.utils.wasm.module.instructions.TableGet;
+import com.shtick.utils.wasm.module.instructions.TableGrow;
+import com.shtick.utils.wasm.module.instructions.TableInitialize;
+import com.shtick.utils.wasm.module.instructions.TableSet;
+import com.shtick.utils.wasm.module.instructions.TableSize;
 import com.shtick.utils.wasm.module.instructions.Unreachable;
 
 /**
@@ -253,6 +277,16 @@ public class ModuleDeserializer {
 		throw new IOException("Unrecognized value type found: 0x"+Integer.toHexString(type));
 	}
 
+	private static ReferenceType readReferenceType(InputStream in) throws IOException{
+		int type = in.read();
+		if(type<0)
+			throw new IOException("End of input found when trying to read ReferenceType.");
+		for(ReferenceType v:ReferenceType.values())
+			if(v.getType()==type)
+				return v;
+		throw new IOException("Unrecognized reference type found: 0x"+Integer.toHexString(type));
+	}
+
 	private static Data readData(InputStream in) throws IOException{
 		int encoding = in.read();
 		if(encoding<0)
@@ -301,6 +335,7 @@ public class ModuleDeserializer {
 		int identifier = in.read();
 		if(identifier<0)
 			throw new IOException("End of stream found when trying to identify Instruction.");
+		// Control Instructions
 		if(identifier==0x0B)
 			return null;
 		if(identifier==5) {
@@ -359,6 +394,65 @@ public class ModuleDeserializer {
 			}
 			return new If(blockType, ifInstructions.toArray(new Instruction[ifInstructions.size()]), elseInstructions.toArray(new Instruction[elseInstructions.size()]));
 		}
+		if(identifier==0x0C)
+			return new Branch(readIndex(in));
+		if(identifier==0x0D)
+			return new BranchIf(readIndex(in));
+		if(identifier==0x0E)
+			return new BranchTable(readVector(ModuleDeserializer::readIndex, in), readIndex(in));
+		if(identifier==0x0F)
+			return new Return();
+		if(identifier==0x10)
+			return new CallByIndex(new FunctionIndex(readUnsignedLEB128(in)));
+		if(identifier==0x11)
+			return new CallIndirect(new TypeIndex(readUnsignedLEB128(in)), new TableIndex(readUnsignedLEB128(in)));
+		// Reference Instructions
+		if(identifier==0xD0)
+			return new ReferenceNull(readReferenceType(in));
+		if(identifier==0xD1)
+			return new ReferenceIsNull();
+		if(identifier==0xD2)
+			return new ReferenceFunction(new FunctionIndex(readUnsignedLEB128(in)));
+		// Parametric Instructions
+		if(identifier==0x1A)
+			return new Drop();
+		if(identifier==0x1B)
+			return new Select(new Vector<ValueType>());
+		if(identifier==0x1C)
+			return new Select(readVector(ModuleDeserializer::readValueType, in));
+		// Variable Instructions
+		if(identifier==0x20)
+			return new LocalGet(readIndex(in));
+		if(identifier==0x21)
+			return new LocalSet(readIndex(in));
+		if(identifier==0x22)
+			return new LocalTee(readIndex(in));
+		if(identifier==0x23)
+			return new GlobalGet(new GlobalIndex(readUnsignedLEB128(in)));
+		if(identifier==0x24)
+			return new GlobalSet(new GlobalIndex(readUnsignedLEB128(in)));
+		// Table Instructions
+		if(identifier==0x25)
+			return new TableGet(new TableIndex(readUnsignedLEB128(in)));
+		if(identifier==0x26)
+			return new TableSet(new TableIndex(readUnsignedLEB128(in)));
+		if(identifier==0xFC) {
+			long subidentifier = readUnsignedLEB128(in);
+			if(subidentifier==12)
+				return new TableInitialize(readIndex(in),new TableIndex(readUnsignedLEB128(in)));
+			if(subidentifier==13)
+				return new ElementDrop(readIndex(in));
+			if(subidentifier==14)
+				return new TableCopy(new TableIndex(readUnsignedLEB128(in)),new TableIndex(readUnsignedLEB128(in)));
+			if(subidentifier==15)
+				return new TableGrow(new TableIndex(readUnsignedLEB128(in)));
+			if(subidentifier==16)
+				return new TableSize(new TableIndex(readUnsignedLEB128(in)));
+			if(subidentifier==17)
+				return new TableFill(new TableIndex(readUnsignedLEB128(in)));
+		}
+		// Memory Instructions
+		
 		
 		// TODO
 		throw new IOException("Unrecoginized instruction identifier found.");
@@ -384,6 +478,10 @@ public class ModuleDeserializer {
 			}
 		}
 		return new BlockTypeIndex(readSignedLEB128(new ByteArrayInputStream(blockTypeBytes)));
+	}
+	
+	private static Index readIndex(InputStream in) throws IOException{
+		return new Index(readUnsignedLEB128(in));
 	}
 	
 	private static <T> Vector<T> readVector(ElementReader<T> elementReader, InputStream in) throws IOException{
