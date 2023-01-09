@@ -13,68 +13,7 @@ import java.util.LinkedList;
 import java.util.Vector;
 
 import com.shtick.utils.wasm.module.Data.DataMode;
-import com.shtick.utils.wasm.module.instructions.Block;
-import com.shtick.utils.wasm.module.instructions.BlockType;
-import com.shtick.utils.wasm.module.instructions.BlockTypeEmpty;
-import com.shtick.utils.wasm.module.instructions.BlockTypeIndex;
-import com.shtick.utils.wasm.module.instructions.BlockTypeValueType;
-import com.shtick.utils.wasm.module.instructions.Branch;
-import com.shtick.utils.wasm.module.instructions.BranchIf;
-import com.shtick.utils.wasm.module.instructions.BranchTable;
-import com.shtick.utils.wasm.module.instructions.CallByIndex;
-import com.shtick.utils.wasm.module.instructions.CallIndirect;
-import com.shtick.utils.wasm.module.instructions.DataDrop;
-import com.shtick.utils.wasm.module.instructions.Drop;
-import com.shtick.utils.wasm.module.instructions.ElementDrop;
-import com.shtick.utils.wasm.module.instructions.F32Load;
-import com.shtick.utils.wasm.module.instructions.F32Store;
-import com.shtick.utils.wasm.module.instructions.F64Load;
-import com.shtick.utils.wasm.module.instructions.F64Store;
-import com.shtick.utils.wasm.module.instructions.GlobalGet;
-import com.shtick.utils.wasm.module.instructions.GlobalSet;
-import com.shtick.utils.wasm.module.instructions.I32Load;
-import com.shtick.utils.wasm.module.instructions.I32Load16S;
-import com.shtick.utils.wasm.module.instructions.I32Load16U;
-import com.shtick.utils.wasm.module.instructions.I32Load8S;
-import com.shtick.utils.wasm.module.instructions.I32Load8U;
-import com.shtick.utils.wasm.module.instructions.I32Store;
-import com.shtick.utils.wasm.module.instructions.I32Store16;
-import com.shtick.utils.wasm.module.instructions.I32Store8;
-import com.shtick.utils.wasm.module.instructions.I64Load;
-import com.shtick.utils.wasm.module.instructions.I64Load16S;
-import com.shtick.utils.wasm.module.instructions.I64Load16U;
-import com.shtick.utils.wasm.module.instructions.I64Load32S;
-import com.shtick.utils.wasm.module.instructions.I64Load32U;
-import com.shtick.utils.wasm.module.instructions.I64Load8S;
-import com.shtick.utils.wasm.module.instructions.I64Load8U;
-import com.shtick.utils.wasm.module.instructions.I64Store;
-import com.shtick.utils.wasm.module.instructions.I64Store16;
-import com.shtick.utils.wasm.module.instructions.I64Store32;
-import com.shtick.utils.wasm.module.instructions.I64Store8;
-import com.shtick.utils.wasm.module.instructions.If;
-import com.shtick.utils.wasm.module.instructions.LocalGet;
-import com.shtick.utils.wasm.module.instructions.LocalSet;
-import com.shtick.utils.wasm.module.instructions.LocalTee;
-import com.shtick.utils.wasm.module.instructions.Loop;
-import com.shtick.utils.wasm.module.instructions.MemoryCopy;
-import com.shtick.utils.wasm.module.instructions.MemoryFill;
-import com.shtick.utils.wasm.module.instructions.MemoryGrow;
-import com.shtick.utils.wasm.module.instructions.MemoryInitialize;
-import com.shtick.utils.wasm.module.instructions.MemorySize;
-import com.shtick.utils.wasm.module.instructions.Nop;
-import com.shtick.utils.wasm.module.instructions.ReferenceFunction;
-import com.shtick.utils.wasm.module.instructions.ReferenceIsNull;
-import com.shtick.utils.wasm.module.instructions.ReferenceNull;
-import com.shtick.utils.wasm.module.instructions.Return;
-import com.shtick.utils.wasm.module.instructions.Select;
-import com.shtick.utils.wasm.module.instructions.TableCopy;
-import com.shtick.utils.wasm.module.instructions.TableFill;
-import com.shtick.utils.wasm.module.instructions.TableGet;
-import com.shtick.utils.wasm.module.instructions.TableGrow;
-import com.shtick.utils.wasm.module.instructions.TableInitialize;
-import com.shtick.utils.wasm.module.instructions.TableSet;
-import com.shtick.utils.wasm.module.instructions.TableSize;
-import com.shtick.utils.wasm.module.instructions.Unreachable;
+import com.shtick.utils.wasm.module.instructions.*;
 
 /**
  * @author seanmcox
@@ -467,6 +406,22 @@ public class ModuleDeserializer {
 			return new TableSet(new TableIndex(readUnsignedLEB128(in)));
 		if(identifier==0xFC) {
 			long subidentifier = readUnsignedLEB128(in);
+			if(subidentifier==0)
+				return new I32TruncSatF32S();
+			if(subidentifier==1)
+				return new I32TruncSatF32U();
+			if(subidentifier==2)
+				return new I32TruncSatF64S();
+			if(subidentifier==3)
+				return new I32TruncSatF64U();
+			if(subidentifier==4)
+				return new I64TruncSatF32S();
+			if(subidentifier==5)
+				return new I64TruncSatF32U();
+			if(subidentifier==6)
+				return new I64TruncSatF64S();
+			if(subidentifier==7)
+				return new I64TruncSatF64U();
 			if(subidentifier==8) {
 				MemoryInitialize retval = new MemoryInitialize(readIndex(in));
 				if(in.read()!=0)
@@ -558,9 +513,279 @@ public class ModuleDeserializer {
 		}
 		// Memory instructions encoded under the 0xFC identifier handled in the table section.
 		// Numeric Instructions
+		if(identifier==0x41)
+			return new I32Const((int)readSignedLEB128(in));
+		if(identifier==0x42)
+			return new I64Const(readSignedLEB128(in));
+		if(identifier==0x43)
+			return new F32Const(readFloat(in));
+		if(identifier==0x44)
+			return new F64Const(readDouble(in));
+		if(identifier==0x45)
+			return new I32Eqz();
+		if(identifier==0x46)
+			return new I32Eq();
+		if(identifier==0x47)
+			return new I32Ne();
+		if(identifier==0x48)
+			return new I32LtS();
+		if(identifier==0x49)
+			return new I32LtU();
+		if(identifier==0x4A)
+			return new I32GtS();
+		if(identifier==0x4B)
+			return new I32GtU();
+		if(identifier==0x4C)
+			return new I32LeS();
+		if(identifier==0x4D)
+			return new I32LeU();
+		if(identifier==0x4E)
+			return new I32GeS();
+		if(identifier==0x4F)
+			return new I32GeU();
+		if(identifier==0x50)
+			return new I64Eqz();
+		if(identifier==0x51)
+			return new I64Eq();
+		if(identifier==0x52)
+			return new I64Ne();
+		if(identifier==0x53)
+			return new I64LtS();
+		if(identifier==0x54)
+			return new I64LtU();
+		if(identifier==0x55)
+			return new I64GtS();
+		if(identifier==0x56)
+			return new I64GtU();
+		if(identifier==0x57)
+			return new I64LeS();
+		if(identifier==0x58)
+			return new I64LeU();
+		if(identifier==0x59)
+			return new I64GeS();
+		if(identifier==0x5A)
+			return new I64GeU();
+		if(identifier==0x5B)
+			return new F32Eq();
+		if(identifier==0x5C)
+			return new F32Ne();
+		if(identifier==0x5D)
+			return new F32Lt();
+		if(identifier==0x5E)
+			return new F32Gt();
+		if(identifier==0x5F)
+			return new F32Le();
+		if(identifier==0x60)
+			return new F32Ge();
+		if(identifier==0x61)
+			return new F64Eq();
+		if(identifier==0x62)
+			return new F64Ne();
+		if(identifier==0x63)
+			return new F64Lt();
+		if(identifier==0x64)
+			return new F64Gt();
+		if(identifier==0x65)
+			return new F64Le();
+		if(identifier==0x66)
+			return new F64Ge();
+		if(identifier==0x67)
+			return new I32Clz();
+		if(identifier==0x68)
+			return new I32Ctz();
+		if(identifier==0x69)
+			return new I32Popcnt();
+		if(identifier==0x6A)
+			return new I32Add();
+		if(identifier==0x6B)
+			return new I32Sub();
+		if(identifier==0x6C)
+			return new I32Mul();
+		if(identifier==0x6D)
+			return new I32DivS();
+		if(identifier==0x6E)
+			return new I32DivU();
+		if(identifier==0x6F)
+			return new I32RemS();
+		if(identifier==0x70)
+			return new I32RemU();
+		if(identifier==0x71)
+			return new I32And();
+		if(identifier==0x72)
+			return new I32Or();
+		if(identifier==0x73)
+			return new I32Xor();
+		if(identifier==0x74)
+			return new I32Shl();
+		if(identifier==0x75)
+			return new I32ShrS();
+		if(identifier==0x76)
+			return new I32ShrU();
+		if(identifier==0x77)
+			return new I32Rotl();
+		if(identifier==0x78)
+			return new I32Rotr();
+		if(identifier==0x79)
+			return new I64Clz();
+		if(identifier==0x7A)
+			return new I64Ctz();
+		if(identifier==0x7B)
+			return new I64Popcnt();
+		if(identifier==0x7C)
+			return new I64Add();
+		if(identifier==0x7D)
+			return new I64Sub();
+		if(identifier==0x7E)
+			return new I64Mul();
+		if(identifier==0x7F)
+			return new I64DivS();
+		if(identifier==0x80)
+			return new I64DivU();
+		if(identifier==0x81)
+			return new I64RemS();
+		if(identifier==0x82)
+			return new I64RemU();
+		if(identifier==0x83)
+			return new I64And();
+		if(identifier==0x84)
+			return new I64Or();
+		if(identifier==0x85)
+			return new I64Xor();
+		if(identifier==0x86)
+			return new I64Shl();
+		if(identifier==0x87)
+			return new I64ShrS();
+		if(identifier==0x88)
+			return new I64ShrU();
+		if(identifier==0x89)
+			return new I64Rotl();
+		if(identifier==0x8A)
+			return new I64Rotr();
+		if(identifier==0x8B)
+			return new F32Abs();
+		if(identifier==0x8C)
+			return new F32Neg();
+		if(identifier==0x8D)
+			return new F32Ceil();
+		if(identifier==0x8E)
+			return new F32Floor();
+		if(identifier==0x8F)
+			return new F32Trunc();
+		if(identifier==0x90)
+			return new F32Nearest();
+		if(identifier==0x91)
+			return new F32Sqrt();
+		if(identifier==0x92)
+			return new F32Add();
+		if(identifier==0x93)
+			return new F32Sub();
+		if(identifier==0x94)
+			return new F32Mul();
+		if(identifier==0x95)
+			return new F32Div();
+		if(identifier==0x96)
+			return new F32Min();
+		if(identifier==0x97)
+			return new F32Max();
+		if(identifier==0x98)
+			return new F32CopySign();
+		if(identifier==0x99)
+			return new F64Abs();
+		if(identifier==0x9A)
+			return new F64Neg();
+		if(identifier==0x9B)
+			return new F64Ceil();
+		if(identifier==0x9C)
+			return new F64Floor();
+		if(identifier==0x9D)
+			return new F64Trunc();
+		if(identifier==0x9E)
+			return new F64Nearest();
+		if(identifier==0x9F)
+			return new F64Sqrt();
+		if(identifier==0xA0)
+			return new F64Add();
+		if(identifier==0xA1)
+			return new F64Sub();
+		if(identifier==0xA2)
+			return new F64Mul();
+		if(identifier==0xA3)
+			return new F64Div();
+		if(identifier==0xA4)
+			return new F64Min();
+		if(identifier==0xA5)
+			return new F64Max();
+		if(identifier==0xA6)
+			return new F64CopySign();
+		if(identifier==0xA7)
+			return new I32WrapI64();
+		if(identifier==0xA8)
+			return new I32TruncF32S();
+		if(identifier==0xA9)
+			return new I32TruncF32U();
+		if(identifier==0xAA)
+			return new I32TruncF64S();
+		if(identifier==0xAB)
+			return new I32TruncF64U();
+		if(identifier==0xAC)
+			return new I64ExtendI32S();
+		if(identifier==0xAD)
+			return new I64ExtendI32U();
+		if(identifier==0xAE)
+			return new I64TruncF32S();
+		if(identifier==0xAF)
+			return new I64TruncF32U();
+		if(identifier==0xB0)
+			return new I64TruncF64S();
+		if(identifier==0xB1)
+			return new I64TruncF64U();
+		if(identifier==0xB2)
+			return new F32ConvertI32S();
+		if(identifier==0xB3)
+			return new F32ConvertI32U();
+		if(identifier==0xB4)
+			return new F32ConvertI64S();
+		if(identifier==0xB5)
+			return new F32ConvertI64U();
+		if(identifier==0xB6)
+			return new F32DemoteF64();
+		if(identifier==0xB7)
+			return new F64ConvertI32S();
+		if(identifier==0xB8)
+			return new F64ConvertI32U();
+		if(identifier==0xB9)
+			return new F64ConvertI64S();
+		if(identifier==0xBA)
+			return new F64ConvertI64U();
+		if(identifier==0xBB)
+			return new F64PromoteF32();
+		if(identifier==0xBC)
+			return new I32ReinterpretF32();
+		if(identifier==0xBD)
+			return new I64ReinterpretF64();
+		if(identifier==0xBE)
+			return new F32ReinterpretI32();
+		if(identifier==0xBF)
+			return new F64ReinterpretI64();
+		if(identifier==0xC0)
+			return new I32Extend8S();
+		if(identifier==0xC1)
+			return new I32Extend16S();
+		if(identifier==0xC2)
+			return new I64Extend8S();
+		if(identifier==0xC3)
+			return new I64Extend16S();
+		if(identifier==0xC4)
+			return new I64Extend32S();
+		// Numeric instructions encoded under the 0xFC identifier handled in the table section.
+		// Vector Instructions
+		if(identifier==0xFD) {
+			long subidentifier = readUnsignedLEB128(in);
+			if(subidentifier==0)
+				return new V128Load(readUnsignedLEB128(in),readUnsignedLEB128(in));
+			// TODO
+		}
 		
-		
-		// TODO
 		throw new IOException("Unrecoginized instruction identifier found.");
 	}
 	
@@ -684,6 +909,30 @@ public class ModuleDeserializer {
 		} while ((b_in & 0x080L) != 0);
 
 		return out.toByteArray();
+	}
+	
+	private static float readFloat(InputStream in) throws IOException {
+		byte[] bytes = in.readNBytes(4);
+		if(bytes.length<4)
+			throw new IOException("End of stream encountered while reading float.");
+		int bits=0;
+		for(int i=3;i>=0;i--) {
+			bits<<=8;
+			bits|=((int)bytes[i])&0x0FF;
+		}
+		return Float.intBitsToFloat(bits);
+	}
+	
+	private static double readDouble(InputStream in) throws IOException {
+		byte[] bytes = in.readNBytes(8);
+		if(bytes.length<8)
+			throw new IOException("End of stream encountered while reading float.");
+		long bits=0;
+		for(int i=7;i>=0;i--) {
+			bits<<=8;
+			bits|=((int)bytes[i])&0x0FF;
+		}
+		return Double.longBitsToDouble(bits);
 	}
 	
 	interface ElementReader<ER>{
