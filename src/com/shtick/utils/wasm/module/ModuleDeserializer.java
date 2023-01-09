@@ -23,15 +23,44 @@ import com.shtick.utils.wasm.module.instructions.BranchIf;
 import com.shtick.utils.wasm.module.instructions.BranchTable;
 import com.shtick.utils.wasm.module.instructions.CallByIndex;
 import com.shtick.utils.wasm.module.instructions.CallIndirect;
+import com.shtick.utils.wasm.module.instructions.DataDrop;
 import com.shtick.utils.wasm.module.instructions.Drop;
 import com.shtick.utils.wasm.module.instructions.ElementDrop;
+import com.shtick.utils.wasm.module.instructions.F32Load;
+import com.shtick.utils.wasm.module.instructions.F32Store;
+import com.shtick.utils.wasm.module.instructions.F64Load;
+import com.shtick.utils.wasm.module.instructions.F64Store;
 import com.shtick.utils.wasm.module.instructions.GlobalGet;
 import com.shtick.utils.wasm.module.instructions.GlobalSet;
+import com.shtick.utils.wasm.module.instructions.I32Load;
+import com.shtick.utils.wasm.module.instructions.I32Load16S;
+import com.shtick.utils.wasm.module.instructions.I32Load16U;
+import com.shtick.utils.wasm.module.instructions.I32Load8S;
+import com.shtick.utils.wasm.module.instructions.I32Load8U;
+import com.shtick.utils.wasm.module.instructions.I32Store;
+import com.shtick.utils.wasm.module.instructions.I32Store16;
+import com.shtick.utils.wasm.module.instructions.I32Store8;
+import com.shtick.utils.wasm.module.instructions.I64Load;
+import com.shtick.utils.wasm.module.instructions.I64Load16S;
+import com.shtick.utils.wasm.module.instructions.I64Load16U;
+import com.shtick.utils.wasm.module.instructions.I64Load32S;
+import com.shtick.utils.wasm.module.instructions.I64Load32U;
+import com.shtick.utils.wasm.module.instructions.I64Load8S;
+import com.shtick.utils.wasm.module.instructions.I64Load8U;
+import com.shtick.utils.wasm.module.instructions.I64Store;
+import com.shtick.utils.wasm.module.instructions.I64Store16;
+import com.shtick.utils.wasm.module.instructions.I64Store32;
+import com.shtick.utils.wasm.module.instructions.I64Store8;
 import com.shtick.utils.wasm.module.instructions.If;
 import com.shtick.utils.wasm.module.instructions.LocalGet;
 import com.shtick.utils.wasm.module.instructions.LocalSet;
 import com.shtick.utils.wasm.module.instructions.LocalTee;
 import com.shtick.utils.wasm.module.instructions.Loop;
+import com.shtick.utils.wasm.module.instructions.MemoryCopy;
+import com.shtick.utils.wasm.module.instructions.MemoryFill;
+import com.shtick.utils.wasm.module.instructions.MemoryGrow;
+import com.shtick.utils.wasm.module.instructions.MemoryInitialize;
+import com.shtick.utils.wasm.module.instructions.MemorySize;
 import com.shtick.utils.wasm.module.instructions.Nop;
 import com.shtick.utils.wasm.module.instructions.ReferenceFunction;
 import com.shtick.utils.wasm.module.instructions.ReferenceIsNull;
@@ -438,6 +467,24 @@ public class ModuleDeserializer {
 			return new TableSet(new TableIndex(readUnsignedLEB128(in)));
 		if(identifier==0xFC) {
 			long subidentifier = readUnsignedLEB128(in);
+			if(subidentifier==8) {
+				MemoryInitialize retval = new MemoryInitialize(readIndex(in));
+				if(in.read()!=0)
+					throw new IOException("Unrecoginized memory initialize instruction subidentifier found.");
+				return retval;
+			}
+			if(subidentifier==9)
+				return new DataDrop(readIndex(in));
+			if(subidentifier==10) {
+				if((in.read()!=0)||(in.read()!=0))
+					throw new IOException("Unrecoginized memory initialize instruction subidentifier found.");
+				return new MemoryCopy();
+			}
+			if(subidentifier==11) {
+				if(in.read()!=0)
+					throw new IOException("Unrecoginized memory initialize instruction subidentifier found.");
+				return new MemoryFill();
+			}
 			if(subidentifier==12)
 				return new TableInitialize(readIndex(in),new TableIndex(readUnsignedLEB128(in)));
 			if(subidentifier==13)
@@ -450,8 +497,67 @@ public class ModuleDeserializer {
 				return new TableSize(new TableIndex(readUnsignedLEB128(in)));
 			if(subidentifier==17)
 				return new TableFill(new TableIndex(readUnsignedLEB128(in)));
+			throw new IOException("Unrecoginized 0xFC instruction subidentifier found.");
 		}
 		// Memory Instructions
+		if(identifier==0x28)
+			return new I32Load(readUnsignedLEB128(in),readUnsignedLEB128(in));
+		if(identifier==0x29)
+			return new I64Load(readUnsignedLEB128(in),readUnsignedLEB128(in));
+		if(identifier==0x2A)
+			return new F32Load(readUnsignedLEB128(in),readUnsignedLEB128(in));
+		if(identifier==0x2B)
+			return new F64Load(readUnsignedLEB128(in),readUnsignedLEB128(in));
+		if(identifier==0x2C)
+			return new I32Load8S(readUnsignedLEB128(in),readUnsignedLEB128(in));
+		if(identifier==0x2D)
+			return new I32Load8U(readUnsignedLEB128(in),readUnsignedLEB128(in));
+		if(identifier==0x2E)
+			return new I32Load16S(readUnsignedLEB128(in),readUnsignedLEB128(in));
+		if(identifier==0x2F)
+			return new I32Load16U(readUnsignedLEB128(in),readUnsignedLEB128(in));
+		if(identifier==0x30)
+			return new I64Load8S(readUnsignedLEB128(in),readUnsignedLEB128(in));
+		if(identifier==0x31)
+			return new I64Load8U(readUnsignedLEB128(in),readUnsignedLEB128(in));
+		if(identifier==0x32)
+			return new I64Load16S(readUnsignedLEB128(in),readUnsignedLEB128(in));
+		if(identifier==0x33)
+			return new I64Load16U(readUnsignedLEB128(in),readUnsignedLEB128(in));
+		if(identifier==0x34)
+			return new I64Load32S(readUnsignedLEB128(in),readUnsignedLEB128(in));
+		if(identifier==0x35)
+			return new I64Load32U(readUnsignedLEB128(in),readUnsignedLEB128(in));
+		if(identifier==0x36)
+			return new I32Store(readUnsignedLEB128(in),readUnsignedLEB128(in));
+		if(identifier==0x37)
+			return new I64Store(readUnsignedLEB128(in),readUnsignedLEB128(in));
+		if(identifier==0x38)
+			return new F32Store(readUnsignedLEB128(in),readUnsignedLEB128(in));
+		if(identifier==0x39)
+			return new F64Store(readUnsignedLEB128(in),readUnsignedLEB128(in));
+		if(identifier==0x3A)
+			return new I32Store8(readUnsignedLEB128(in),readUnsignedLEB128(in));
+		if(identifier==0x3B)
+			return new I32Store16(readUnsignedLEB128(in),readUnsignedLEB128(in));
+		if(identifier==0x3C)
+			return new I64Store8(readUnsignedLEB128(in),readUnsignedLEB128(in));
+		if(identifier==0x3D)
+			return new I64Store16(readUnsignedLEB128(in),readUnsignedLEB128(in));
+		if(identifier==0x3E)
+			return new I64Store32(readUnsignedLEB128(in),readUnsignedLEB128(in));
+		if(identifier==0x3F) {
+			if(in.read()!=0)
+				throw new IOException("Unrecoginized memory size instruction subidentifier found.");
+			return new MemorySize();
+		}
+		if(identifier==0x40) {
+			if(in.read()!=0)
+				throw new IOException("Unrecoginized memory grow instruction subidentifier found.");
+			return new MemoryGrow();
+		}
+		// Memory instructions encoded under the 0xFC identifier handled in the table section.
+		// Numeric Instructions
 		
 		
 		// TODO
