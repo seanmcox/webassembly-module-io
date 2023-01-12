@@ -783,7 +783,588 @@ public class ModuleDeserializer {
 			long subidentifier = readUnsignedLEB128(in);
 			if(subidentifier==0)
 				return new V128Load(readUnsignedLEB128(in),readUnsignedLEB128(in));
-			// TODO
+			if(subidentifier==1)
+				return new V128Load8x8S(readUnsignedLEB128(in),readUnsignedLEB128(in));
+			if(subidentifier==2)
+				return new V128Load8x8U(readUnsignedLEB128(in),readUnsignedLEB128(in));
+			if(subidentifier==3)
+				return new V128Load16x4S(readUnsignedLEB128(in),readUnsignedLEB128(in));
+			if(subidentifier==4)
+				return new V128Load16x4U(readUnsignedLEB128(in),readUnsignedLEB128(in));
+			if(subidentifier==5)
+				return new V128Load32x2S(readUnsignedLEB128(in),readUnsignedLEB128(in));
+			if(subidentifier==6)
+				return new V128Load32x2U(readUnsignedLEB128(in),readUnsignedLEB128(in));
+			if(subidentifier==7)
+				return new V128Load8Splat(readUnsignedLEB128(in),readUnsignedLEB128(in));
+			if(subidentifier==8)
+				return new V128Load16Splat(readUnsignedLEB128(in),readUnsignedLEB128(in));
+			if(subidentifier==9)
+				return new V128Load32Splat(readUnsignedLEB128(in),readUnsignedLEB128(in));
+			if(subidentifier==10)
+				return new V128Load64Splat(readUnsignedLEB128(in),readUnsignedLEB128(in));
+			if(subidentifier==11)
+				return new V128Store(readUnsignedLEB128(in),readUnsignedLEB128(in));
+			if(subidentifier==12) {
+				byte[] bytes = in.readNBytes(16);
+				if(bytes.length<16)
+					throw new IOException("16 bytes expected for V128 Constant, but only "+bytes.length+" found.");
+				return new V128Const(bytes);
+			}
+			if(subidentifier==13) {
+				byte[] bytes = in.readNBytes(16);
+				if(bytes.length<16)
+					throw new IOException("16 bytes expected for I8x16Shuffle, but only "+bytes.length+" found.");
+				return new I8x16Shuffle(bytes);
+			}
+			if(subidentifier==14)
+				return new I8x16Swizzle();
+			if(subidentifier==15)
+				return new I8x16Splat();
+			if(subidentifier==16)
+				return new I16x8Splat();
+			if(subidentifier==17)
+				return new I32x4Splat();
+			if(subidentifier==18)
+				return new I64x2Splat();
+			if(subidentifier==19)
+				return new F32x4Splat();
+			if(subidentifier==20)
+				return new F64x2Splat();
+			if(subidentifier==21) {
+				int laneIndex = in.read();
+				if(laneIndex<0)
+					throw new IOException("End of stream found when reading I8x16ExtractLaneS.");
+				return new I8x16ExtractLaneS(laneIndex);
+			}
+			if(subidentifier==22) {
+				int laneIndex = in.read();
+				if(laneIndex<0)
+					throw new IOException("End of stream found when reading I8x16ExtractLaneU.");
+				return new I8x16ExtractLaneU(laneIndex);
+			}
+			if(subidentifier==23) {
+				int laneIndex = in.read();
+				if(laneIndex<0)
+					throw new IOException("End of stream found when reading I8x16ReplaceLane.");
+				return new I8x16ReplaceLane(laneIndex);
+			}
+			if(subidentifier==24) {
+				int laneIndex = in.read();
+				if(laneIndex<0)
+					throw new IOException("End of stream found when reading I16x8ExtractLaneS.");
+				return new I16x8ExtractLaneS(laneIndex);
+			}
+			if(subidentifier==25) {
+				int laneIndex = in.read();
+				if(laneIndex<0)
+					throw new IOException("End of stream found when reading I16x8ExtractLaneU.");
+				return new I16x8ExtractLaneU(laneIndex);
+			}
+			if(subidentifier==26) {
+				int laneIndex = in.read();
+				if(laneIndex<0)
+					throw new IOException("End of stream found when reading I16x8ReplaceLane.");
+				return new I16x8ReplaceLane(laneIndex);
+			}
+			if(subidentifier==27) {
+				int laneIndex = in.read();
+				if(laneIndex<0)
+					throw new IOException("End of stream found when reading I32x4ExtractLane.");
+				return new I32x4ExtractLane(laneIndex);
+			}
+			if(subidentifier==28) {
+				int laneIndex = in.read();
+				if(laneIndex<0)
+					throw new IOException("End of stream found when reading I32x4ReplaceLane.");
+				return new I32x4ReplaceLane(laneIndex);
+			}
+			if(subidentifier==29) {
+				int laneIndex = in.read();
+				if(laneIndex<0)
+					throw new IOException("End of stream found when reading I64x2ExtractLane.");
+				return new I64x2ExtractLane(laneIndex);
+			}
+			if(subidentifier==30) {
+				int laneIndex = in.read();
+				if(laneIndex<0)
+					throw new IOException("End of stream found when reading I64x2ReplaceLane.");
+				return new I64x2ReplaceLane(laneIndex);
+			}
+			if(subidentifier==31) {
+				int laneIndex = in.read();
+				if(laneIndex<0)
+					throw new IOException("End of stream found when reading F32x4ExtractLane.");
+				return new F32x4ExtractLane(laneIndex);
+			}
+			if(subidentifier==32) {
+				int laneIndex = in.read();
+				if(laneIndex<0)
+					throw new IOException("End of stream found when reading F32x4ReplaceLane.");
+				return new F32x4ReplaceLane(laneIndex);
+			}
+			if(subidentifier==33) {
+				int laneIndex = in.read();
+				if(laneIndex<0)
+					throw new IOException("End of stream found when reading F64x2ExtractLane.");
+				return new F64x2ExtractLane(laneIndex);
+			}
+			if(subidentifier==34) {
+				int laneIndex = in.read();
+				if(laneIndex<0)
+					throw new IOException("End of stream found when reading F64x2ReplaceLane.");
+				return new F64x2ReplaceLane(laneIndex);
+			}
+			if(subidentifier==35)
+				return new I8x16Eq();
+			if(subidentifier==36)
+				return new I8x16Ne();
+			if(subidentifier==37)
+				return new I8x16LtS();
+			if(subidentifier==38)
+				return new I8x16LtU();
+			if(subidentifier==39)
+				return new I8x16GtS();
+			if(subidentifier==40)
+				return new I8x16GtU();
+			if(subidentifier==41)
+				return new I8x16LeS();
+			if(subidentifier==42)
+				return new I8x16LeU();
+			if(subidentifier==43)
+				return new I8x16GeS();
+			if(subidentifier==44)
+				return new I8x16GeU();
+			if(subidentifier==45)
+				return new I16x8Eq();
+			if(subidentifier==46)
+				return new I16x8Ne();
+			if(subidentifier==47)
+				return new I16x8LtS();
+			if(subidentifier==48)
+				return new I16x8LtU();
+			if(subidentifier==49)
+				return new I16x8GtS();
+			if(subidentifier==50)
+				return new I16x8GtU();
+			if(subidentifier==51)
+				return new I16x8LeS();
+			if(subidentifier==52)
+				return new I16x8LeU();
+			if(subidentifier==53)
+				return new I16x8GeS();
+			if(subidentifier==54)
+				return new I16x8GeU();
+			if(subidentifier==55)
+				return new I32x4Eq();
+			if(subidentifier==56)
+				return new I32x4Ne();
+			if(subidentifier==57)
+				return new I32x4LtS();
+			if(subidentifier==58)
+				return new I32x4LtU();
+			if(subidentifier==59)
+				return new I32x4GtS();
+			if(subidentifier==60)
+				return new I32x4GtU();
+			if(subidentifier==61)
+				return new I32x4LeS();
+			if(subidentifier==62)
+				return new I32x4LeU();
+			if(subidentifier==63)
+				return new I32x4GeS();
+			if(subidentifier==64)
+				return new I32x4GeU();
+			if(subidentifier==65)
+				return new F32x4Eq();
+			if(subidentifier==66)
+				return new F32x4Ne();
+			if(subidentifier==67)
+				return new F32x4Lt();
+			if(subidentifier==68)
+				return new F32x4Gt();
+			if(subidentifier==69)
+				return new F32x4Le();
+			if(subidentifier==70)
+				return new F32x4Ge();
+			if(subidentifier==71)
+				return new F64x2Eq();
+			if(subidentifier==72)
+				return new F64x2Ne();
+			if(subidentifier==73)
+				return new F64x2Lt();
+			if(subidentifier==74)
+				return new F64x2Gt();
+			if(subidentifier==75)
+				return new F64x2Le();
+			if(subidentifier==76)
+				return new F64x2Ge();
+			if(subidentifier==77)
+				return new V128Not();
+			if(subidentifier==78)
+				return new V128And();
+			if(subidentifier==79)
+				return new V128AndNot();
+			if(subidentifier==80)
+				return new V128Or();
+			if(subidentifier==81)
+				return new V128Xor();
+			if(subidentifier==82)
+				return new V128BitSelect();
+			if(subidentifier==83)
+				return new V128AnyTrue();
+			if(subidentifier==84) {
+				long align = readUnsignedLEB128(in);
+				long offset = readUnsignedLEB128(in);
+				int laneIndex = in.read();
+				if(laneIndex<0)
+					throw new IOException("End of stream found when reading V128Load8Lane.");
+				return new V128Load8Lane(align, offset, laneIndex);
+			}
+			if(subidentifier==85) {
+				long align = readUnsignedLEB128(in);
+				long offset = readUnsignedLEB128(in);
+				int laneIndex = in.read();
+				if(laneIndex<0)
+					throw new IOException("End of stream found when reading V128Load16Lane.");
+				return new V128Load16Lane(align, offset, laneIndex);
+			}
+			if(subidentifier==86) {
+				long align = readUnsignedLEB128(in);
+				long offset = readUnsignedLEB128(in);
+				int laneIndex = in.read();
+				if(laneIndex<0)
+					throw new IOException("End of stream found when reading V128Load32Lane.");
+				return new V128Load32Lane(align, offset, laneIndex);
+			}
+			if(subidentifier==87) {
+				long align = readUnsignedLEB128(in);
+				long offset = readUnsignedLEB128(in);
+				int laneIndex = in.read();
+				if(laneIndex<0)
+					throw new IOException("End of stream found when reading V128Load64Lane.");
+				return new V128Load64Lane(align, offset, laneIndex);
+			}
+			if(subidentifier==88) {
+				long align = readUnsignedLEB128(in);
+				long offset = readUnsignedLEB128(in);
+				int laneIndex = in.read();
+				if(laneIndex<0)
+					throw new IOException("End of stream found when reading V128Store8Lane.");
+				return new V128Store8Lane(align, offset, laneIndex);
+			}
+			if(subidentifier==89) {
+				long align = readUnsignedLEB128(in);
+				long offset = readUnsignedLEB128(in);
+				int laneIndex = in.read();
+				if(laneIndex<0)
+					throw new IOException("End of stream found when reading V128Store16Lane.");
+				return new V128Store16Lane(align, offset, laneIndex);
+			}
+			if(subidentifier==90) {
+				long align = readUnsignedLEB128(in);
+				long offset = readUnsignedLEB128(in);
+				int laneIndex = in.read();
+				if(laneIndex<0)
+					throw new IOException("End of stream found when reading V128Store32Lane.");
+				return new V128Store32Lane(align, offset, laneIndex);
+			}
+			if(subidentifier==91) {
+				long align = readUnsignedLEB128(in);
+				long offset = readUnsignedLEB128(in);
+				int laneIndex = in.read();
+				if(laneIndex<0)
+					throw new IOException("End of stream found when reading V128Store64Lane.");
+				return new V128Store64Lane(align, offset, laneIndex);
+			}
+			if(subidentifier==92)
+				return new V128Load32Zero(readUnsignedLEB128(in), readUnsignedLEB128(in));
+			if(subidentifier==93)
+				return new V128Load64Zero(readUnsignedLEB128(in), readUnsignedLEB128(in));
+			if(subidentifier==94)
+				return new F32x4DemoteF64x2Zero();
+			if(subidentifier==95)
+				return new F64x2PromoteLowF32x4();
+			if(subidentifier==96)
+				return new I8x16Abs();
+			if(subidentifier==97)
+				return new I8x16Neg();
+			if(subidentifier==98)
+				return new I8x16PopCnt();
+			if(subidentifier==99)
+				return new I8x16AllTrue();
+			if(subidentifier==100)
+				return new I8x16BitMask();
+			if(subidentifier==101)
+				return new I8x16NarrowI16x8S();
+			if(subidentifier==102)
+				return new I8x16NarrowI16x8U();
+			if(subidentifier==103)
+				return new F32x4Ceil();
+			if(subidentifier==104)
+				return new F32x4Floor();
+			if(subidentifier==105)
+				return new F32x4Trunc();
+			if(subidentifier==106)
+				return new F32x4Nearest();
+			if(subidentifier==107)
+				return new I8x16Shl();
+			if(subidentifier==108)
+				return new I8x16ShrS();
+			if(subidentifier==109)
+				return new I8x16ShrU();
+			if(subidentifier==110)
+				return new I8x16Add();
+			if(subidentifier==111)
+				return new I8x16AddSatS();
+			if(subidentifier==112)
+				return new I8x16AddSatU();
+			if(subidentifier==113)
+				return new I8x16Sub();
+			if(subidentifier==114)
+				return new I8x16SubSatS();
+			if(subidentifier==115)
+				return new I8x16SubSatU();
+			if(subidentifier==116)
+				return new F64x2Ceil();
+			if(subidentifier==117)
+				return new F64x2Floor();
+			if(subidentifier==118)
+				return new I8x16MinS();
+			if(subidentifier==119)
+				return new I8x16MinU();
+			if(subidentifier==120)
+				return new I8x16MaxS();
+			if(subidentifier==121)
+				return new I8x16MaxU();
+			if(subidentifier==122)
+				return new F64x2Trunc();
+			if(subidentifier==123)
+				return new I8x16AvgrU();
+			if(subidentifier==124)
+				return new I16x8ExtaddPairwiseI8x16S();
+			if(subidentifier==125)
+				return new I16x8ExtaddPairwiseI8x16U();
+			if(subidentifier==126)
+				return new I32x4ExtaddPairwiseI16x8S();
+			if(subidentifier==127)
+				return new I32x4ExtaddPairwiseI16x8U();
+			if(subidentifier==128)
+				return new I16x8Abs();
+			if(subidentifier==129)
+				return new I16x8Neg();
+			if(subidentifier==130)
+				return new I16x8Q15MulrSatS();
+			if(subidentifier==131)
+				return new I16x8AllTrue();
+			if(subidentifier==132)
+				return new I16x8BitMask();
+			if(subidentifier==133)
+				return new I16x8NarrowI32x4S();
+			if(subidentifier==134)
+				return new I16x8NarrowI32x4U();
+			if(subidentifier==135)
+				return new I16x8ExtendLowI8x16S();
+			if(subidentifier==136)
+				return new I16x8ExtendHighI8x16S();
+			if(subidentifier==137)
+				return new I16x8ExtendLowI8x16U();
+			if(subidentifier==138)
+				return new I16x8ExtendHighI8x16U();
+			if(subidentifier==139)
+				return new I16x8Shl();
+			if(subidentifier==140)
+				return new I16x8ShrS();
+			if(subidentifier==141)
+				return new I16x8ShrU();
+			if(subidentifier==142)
+				return new I16x8Add();
+			if(subidentifier==143)
+				return new I16x8AddSatS();
+			if(subidentifier==144)
+				return new I16x8AddSatU();
+			if(subidentifier==145)
+				return new I16x8Sub();
+			if(subidentifier==146)
+				return new I16x8SubSatS();
+			if(subidentifier==147)
+				return new I16x8SubSatU();
+			if(subidentifier==148)
+				return new F64x2Nearest();
+			if(subidentifier==149)
+				return new I16x8Mul();
+			if(subidentifier==150)
+				return new I16x8MinS();
+			if(subidentifier==151)
+				return new I16x8MinU();
+			if(subidentifier==152)
+				return new I16x8MaxS();
+			if(subidentifier==153)
+				return new I16x8MaxU();
+			if(subidentifier==155)
+				return new I16x8AvgrU();
+			if(subidentifier==156)
+				return new I16x8ExtmulLowI8x16S();
+			if(subidentifier==157)
+				return new I16x8ExtmulHighI8x16S();
+			if(subidentifier==158)
+				return new I16x8ExtmulLowI8x16U();
+			if(subidentifier==159)
+				return new I16x8ExtmulHighI8x16U();
+			if(subidentifier==160)
+				return new I32x4Abs();
+			if(subidentifier==161)
+				return new I32x4Neg();
+			if(subidentifier==163)
+				return new I32x4AllTrue();
+			if(subidentifier==164)
+				return new I32x4BitMask();
+			if(subidentifier==167)
+				return new I32x4ExtendLowI16x8S();
+			if(subidentifier==168)
+				return new I32x4ExtendHighI16x8S();
+			if(subidentifier==169)
+				return new I32x4ExtendLowI16x8U();
+			if(subidentifier==170)
+				return new I32x4ExtendHighI16x8U();
+			if(subidentifier==171)
+				return new I32x4Shl();
+			if(subidentifier==172)
+				return new I32x4ShrS();
+			if(subidentifier==173)
+				return new I32x4ShrU();
+			if(subidentifier==174)
+				return new I32x4Add();
+			if(subidentifier==177)
+				return new I32x4Sub();
+			if(subidentifier==181)
+				return new I32x4Mul();
+			if(subidentifier==182)
+				return new I32x4MinS();
+			if(subidentifier==183)
+				return new I32x4MinU();
+			if(subidentifier==184)
+				return new I32x4MaxS();
+			if(subidentifier==185)
+				return new I32x4MaxU();
+			if(subidentifier==186)
+				return new I32x4DotI16x8S();
+			if(subidentifier==188)
+				return new I32x4ExtmulLowI16x8S();
+			if(subidentifier==189)
+				return new I32x4ExtmulHighI16x8S();
+			if(subidentifier==190)
+				return new I32x4ExtmulLowI16x8U();
+			if(subidentifier==191)
+				return new I32x4ExtmulHighI16x8U();
+			if(subidentifier==192)
+				return new I64x2Abs();
+			if(subidentifier==193)
+				return new I64x2Neg();
+			if(subidentifier==195)
+				return new I64x2AllTrue();
+			if(subidentifier==196)
+				return new I64x2BitMask();
+			if(subidentifier==199)
+				return new I64x2ExtendLowI32x4S();
+			if(subidentifier==200)
+				return new I64x2ExtendHighI32x4S();
+			if(subidentifier==201)
+				return new I64x2ExtendLowI32x4U();
+			if(subidentifier==202)
+				return new I64x2ExtendHighI32x4U();
+			if(subidentifier==203)
+				return new I64x2Shl();
+			if(subidentifier==204)
+				return new I64x2ShrS();
+			if(subidentifier==205)
+				return new I64x2ShrU();
+			if(subidentifier==206)
+				return new I64x2Add();
+			if(subidentifier==209)
+				return new I64x2Sub();
+			if(subidentifier==213)
+				return new I64x2Mul();
+			if(subidentifier==214)
+				return new I64x2Eq();
+			if(subidentifier==215)
+				return new I64x2Ne();
+			if(subidentifier==216)
+				return new I64x2LtS();
+			if(subidentifier==217)
+				return new I64x2GtS();
+			if(subidentifier==218)
+				return new I64x2LeS();
+			if(subidentifier==219)
+				return new I64x2GeS();
+			if(subidentifier==220)
+				return new I64x2ExtmulLowI32x4S();
+			if(subidentifier==221)
+				return new I64x2ExtmulHighI32x4S();
+			if(subidentifier==222)
+				return new I64x2ExtmulLowI32x4U();
+			if(subidentifier==223)
+				return new I64x2ExtmulHighI32x4U();
+			if(subidentifier==224)
+				return new F32x4Abs();
+			if(subidentifier==225)
+				return new F32x4Neg();
+			if(subidentifier==227)
+				return new F32x4Sqrt();
+			if(subidentifier==228)
+				return new F32x4Add();
+			if(subidentifier==229)
+				return new F32x4Sub();
+			if(subidentifier==230)
+				return new F32x4Mul();
+			if(subidentifier==231)
+				return new F32x4Div();
+			if(subidentifier==232)
+				return new F32x4Min();
+			if(subidentifier==233)
+				return new F32x4Max();
+			if(subidentifier==234)
+				return new F32x4PMin();
+			if(subidentifier==235)
+				return new F32x4PMax();
+			if(subidentifier==236)
+				return new F64x2Abs();
+			if(subidentifier==237)
+				return new F64x2Neg();
+			if(subidentifier==239)
+				return new F64x2Sqrt();
+			if(subidentifier==240)
+				return new F64x2Add();
+			if(subidentifier==241)
+				return new F64x2Sub();
+			if(subidentifier==242)
+				return new F64x2Mul();
+			if(subidentifier==243)
+				return new F64x2Div();
+			if(subidentifier==244)
+				return new F64x2Min();
+			if(subidentifier==245)
+				return new F64x2Max();
+			if(subidentifier==246)
+				return new F64x2PMin();
+			if(subidentifier==247)
+				return new F64x2PMax();
+			if(subidentifier==248)
+				return new I32x4TruncSatF32x4S();
+			if(subidentifier==249)
+				return new I32x4TruncSatF32x4U();
+			if(subidentifier==250)
+				return new F32x4ConvertI32x4S();
+			if(subidentifier==251)
+				return new F32x4ConvertI32x4U();
+			if(subidentifier==252)
+				return new I32x4TruncSatF64x2SZero();
+			if(subidentifier==253)
+				return new I32x4TruncSatF64x2UZero();
+			if(subidentifier==254)
+				return new F64x2ConvertLowI32x4S();
+			if(subidentifier==255)
+				return new F64x2ConvertLowI32x4U();
 		}
 		
 		throw new IOException("Unrecoginized instruction identifier found.");

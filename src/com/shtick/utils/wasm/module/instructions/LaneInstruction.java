@@ -3,11 +3,13 @@
  */
 package com.shtick.utils.wasm.module.instructions;
 
+import com.shtick.utils.wasm.module.Instruction;
+
 /**
  * @author seanmcox
  *
  */
-public interface LaneInstruction {
+public interface LaneInstruction extends Instruction {
 	/**
 	 * 
 	 * @return The Lane Index.
