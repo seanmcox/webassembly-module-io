@@ -163,11 +163,28 @@ public class ModuleDeserializer {
 			return readCustomSection(in);
 		case ModuleSerializer.TYPE_SECTION_ID:
 			return readTypeSection(in);
+		case ModuleSerializer.IMPORT_SECTION_ID:
+			return readImportSection(in);
+		case ModuleSerializer.FUNCTION_SECTION_ID:
+			return readFunctionSection(in);
+		case ModuleSerializer.TABLE_SECTION_ID:
+			return readTableSection(in);
+		case ModuleSerializer.MEMORY_SECTION_ID:
+			return readMemorySection(in);
+		case ModuleSerializer.GLOBAL_SECTION_ID:
+			return readGlobalSection(in);
+		case ModuleSerializer.EXPORT_SECTION_ID:
+			return readExportSection(in);
+		case ModuleSerializer.START_SECTION_ID:
+			return readStartSection(in);
+		case ModuleSerializer.ELEMENT_SECTION_ID:
+			return readElementSection(in);
 		case ModuleSerializer.DATA_COUNT_SECTION_ID:
 			return readDataCountSection(in);
+		case ModuleSerializer.CODE_SECTION_ID:
+			return readCodeSection(in);
 		case ModuleSerializer.DATA_SECTION_ID:
 			return readDataSection(in);
-		// TODO
 		default:
 			throw new IOException("Found unrecognized Section ID.");
 		}
@@ -185,6 +202,20 @@ public class ModuleDeserializer {
 		return new TypeSection(readVector(ModuleDeserializer::readFunctype, bin));
 	}
 	
+	public ImportSection readImportSection(InputStream in) throws IOException {
+		long dataSize = readUnsignedLEB128(in);
+		byte[] bytes = readNBytes((int)dataSize,in);
+		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
+		return new ImportSection(readVector(ModuleDeserializer::readImport, bin));
+	}
+	
+	public FunctionSection readFunctionSection(InputStream in) throws IOException {
+		long dataSize = readUnsignedLEB128(in);
+		byte[] bytes = readNBytes((int)dataSize,in);
+		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
+		return new FunctionSection(readVector(ModuleDeserializer::readTypeIndex, bin));
+	}
+
 	public DataCountSection readDataCountSection(InputStream in) throws IOException {
 		long dataSize = readUnsignedLEB128(in);
 		long dataCount = readUnsignedLEB128(in);
@@ -198,6 +229,13 @@ public class ModuleDeserializer {
 		byte[] bytes = readNBytes((int)dataSize,in);
 		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
 		return new DataSection(readVector(ModuleDeserializer::readData, bin));
+	}
+	
+	public CodeSection readCodeSection(InputStream in) throws IOException {
+		long dataSize = readUnsignedLEB128(in);
+		byte[] bytes = readNBytes((int)dataSize,in);
+		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
+		return new CodeSection(readVector(ModuleDeserializer::readCode, bin));
 	}
 
 	/********************************************
@@ -216,6 +254,39 @@ public class ModuleDeserializer {
 		ResultType resultType = readResultType(in);
 		return new FunctionType(parameterType, resultType);
 	}
+
+	/**
+	 * See: https://webassembly.github.io/spec/core/binary/modules.html#binary-importsec
+	 * 
+	 * @param in
+	 * @return
+	 * @throws IOException
+	 */
+	private static Import readImport(InputStream in) throws IOException{
+		String module = readName(in);
+		String name = readName(in);
+		ImportDescriptor importDescriptor;
+		int descriptorType = in.read();
+		if(descriptorType<0)
+			throw new IOException("End of input found when trying to read Import.");
+		switch(descriptorType){
+		case 0:
+			importDescriptor = new TypeIndex(readUnsignedLEB128(in));
+			break;
+		case 1:
+			importDescriptor = readTableType(in);
+			break;
+		case 2:
+			importDescriptor = readMemoryType(in);
+			break;
+		case 3:
+			importDescriptor = readGlobalType(in);
+			break;
+		default:
+			throw new IOException("Unrecognized decriptor type marker in Import: "+descriptorType);
+		}
+		return new Import(module, name, null);
+	}
 	
 	/**
 	 * See: https://webassembly.github.io/spec/core/binary/types.html#binary-resulttype
@@ -226,6 +297,21 @@ public class ModuleDeserializer {
 	 */
 	private static ResultType readResultType(InputStream in) throws IOException{
 		return new ResultType(readVector(ModuleDeserializer::readValueType, in));
+	}
+
+	/**
+	 * See: https://webassembly.github.io/spec/core/binary/values.html#binary-name
+	 * 
+	 * @param in
+	 * @return
+	 * @throws IOException
+	 */
+	private static String readName(InputStream in) throws IOException{
+		long length = readUnsignedLEB128(in);
+		byte[] bytes = in.readNBytes((int)length);
+		if(bytes.length<length)
+			throw new IOException("Unexpected end of stream encountered while reading name.");
+		return new String(bytes, "UTF8");
 	}
 
 	/**
@@ -243,6 +329,54 @@ public class ModuleDeserializer {
 			if(v.getType()==type)
 				return v;
 		throw new IOException("Unrecognized value type found: 0x"+Integer.toHexString(type));
+	}
+
+	/**
+	 * See: https://webassembly.github.io/spec/core/binary/types.html#binary-tabletype
+	 * 
+	 * @param in
+	 * @return
+	 * @throws IOException
+	 */
+	private static TableType readTableType(InputStream in) throws IOException{
+		return new TableType(readReferenceType(in), readLimits(in));
+	}
+
+	/**
+	 * 
+	 * @param in
+	 * @return
+	 * @throws IOException
+	 */
+	private static MemoryType readMemoryType(InputStream in) throws IOException{
+		return new MemoryType(readLimits(in));
+	}
+	
+	private static Limits readLimits(InputStream in) throws IOException{
+		int limitType = in.read();
+		if(limitType<0)
+			throw new IOException("End of input found when trying to read Limits.");
+		if(limitType>1)
+			throw new IOException("Unexpected Limits type found when reading Limits.");
+		if(limitType==0)
+			return new Limits((int)readUnsignedLEB128(in),-1);
+		return new Limits((int)readUnsignedLEB128(in),(int)readUnsignedLEB128(in));
+	}
+
+	/**
+	 * 
+	 * @param in
+	 * @return
+	 * @throws IOException
+	 */
+	private static GlobalType readGlobalType(InputStream in) throws IOException{
+		ValueType valueType = readValueType(in);
+		int mutability = in.read();
+		if(mutability<0)
+			throw new IOException("End of input found when trying to read GlobalType.");
+		if(mutability>1)
+			throw new IOException("Unrecognized mutability found when reading GlobalType: "+mutability);
+		return new GlobalType(valueType, (mutability==0)?Mutability.CONSTANT:Mutability.VARIABLE);
 	}
 
 	private static ReferenceType readReferenceType(InputStream in) throws IOException{
@@ -273,6 +407,14 @@ public class ModuleDeserializer {
 		}
 		byte[] data = readByteVector(in);
 		return new Data(data, (encoding==1)?DataMode.PASSIVE:DataMode.ACTIVE, new MemoryIndex(memoryIndex), expression);
+	}
+
+	private static Code readCode(InputStream in) throws IOException{
+		return new Code(readVector(ModuleDeserializer::readLocals,in), readExpression(in));
+	}
+
+	private static Locals readLocals(InputStream in) throws IOException{
+		return new Locals((int)readUnsignedLEB128(in), readValueType(in));
 	}
 
 	/**
@@ -1394,6 +1536,10 @@ public class ModuleDeserializer {
 	
 	private static Index readIndex(InputStream in) throws IOException{
 		return new Index(readUnsignedLEB128(in));
+	}
+	
+	private static TypeIndex readTypeIndex(InputStream in) throws IOException{
+		return new TypeIndex(readUnsignedLEB128(in));
 	}
 	
 	private static <T> Vector<T> readVector(ElementReader<T> elementReader, InputStream in) throws IOException{
