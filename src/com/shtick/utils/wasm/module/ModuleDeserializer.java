@@ -13,6 +13,7 @@ import java.util.LinkedList;
 import java.util.Vector;
 
 import com.shtick.utils.wasm.module.Data.DataMode;
+import com.shtick.utils.wasm.module.Element.ElementMode;
 import com.shtick.utils.wasm.module.instructions.*;
 
 /**
@@ -215,6 +216,48 @@ public class ModuleDeserializer {
 		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
 		return new FunctionSection(readVector(ModuleDeserializer::readTypeIndex, bin));
 	}
+	
+	public TableSection readTableSection(InputStream in) throws IOException {
+		long dataSize = readUnsignedLEB128(in);
+		byte[] bytes = readNBytes((int)dataSize,in);
+		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
+		return new TableSection(readVector(ModuleDeserializer::readTable, bin));
+	}
+	
+	public MemorySection readMemorySection(InputStream in) throws IOException {
+		long dataSize = readUnsignedLEB128(in);
+		byte[] bytes = readNBytes((int)dataSize,in);
+		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
+		return new MemorySection(readVector(ModuleDeserializer::readMemory, bin));
+	}
+	
+	public GlobalSection readGlobalSection(InputStream in) throws IOException {
+		long dataSize = readUnsignedLEB128(in);
+		byte[] bytes = readNBytes((int)dataSize,in);
+		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
+		return new GlobalSection(readVector(ModuleDeserializer::readGlobal, bin));
+	}
+
+	public ExportSection readExportSection(InputStream in) throws IOException {
+		long dataSize = readUnsignedLEB128(in);
+		byte[] bytes = readNBytes((int)dataSize,in);
+		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
+		return new ExportSection(readVector(ModuleDeserializer::readExport, bin));
+	}
+
+	public StartSection readStartSection(InputStream in) throws IOException {
+		long dataSize = readUnsignedLEB128(in);
+		byte[] bytes = readNBytes((int)dataSize,in);
+		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
+		return new StartSection(readStart(bin));
+	}
+
+	public ElementSection readElementSection(InputStream in) throws IOException {
+		long dataSize = readUnsignedLEB128(in);
+		byte[] bytes = readNBytes((int)dataSize,in);
+		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
+		return new ElementSection(readVector(ModuleDeserializer::readElement, bin));
+	}
 
 	public DataCountSection readDataCountSection(InputStream in) throws IOException {
 		long dataSize = readUnsignedLEB128(in);
@@ -285,7 +328,7 @@ public class ModuleDeserializer {
 		default:
 			throw new IOException("Unrecognized decriptor type marker in Import: "+descriptorType);
 		}
-		return new Import(module, name, null);
+		return new Import(module, name, importDescriptor);
 	}
 	
 	/**
@@ -356,11 +399,26 @@ public class ModuleDeserializer {
 		int limitType = in.read();
 		if(limitType<0)
 			throw new IOException("End of input found when trying to read Limits.");
-		if(limitType>1)
-			throw new IOException("Unexpected Limits type found when reading Limits.");
 		if(limitType==0)
 			return new Limits((int)readUnsignedLEB128(in),-1);
-		return new Limits((int)readUnsignedLEB128(in),(int)readUnsignedLEB128(in));
+		if(limitType==1)
+			return new Limits((int)readUnsignedLEB128(in),(int)readUnsignedLEB128(in));
+		throw new IOException("Unexpected Limits type found when reading Limits: "+limitType);
+	}
+	
+	private static ExportDescriptor readExportDescriptor(InputStream in) throws IOException{
+		int type = in.read();
+		if(type<0)
+			throw new IOException("End of input found when trying to read ExportDescriptor.");
+		if(type==0)
+			return new FunctionIndex(readUnsignedLEB128(in));
+		if(type==1)
+			return new TableIndex(readUnsignedLEB128(in));
+		if(type==2)
+			return new MemoryIndex(readUnsignedLEB128(in));
+		if(type==3)
+			return new GlobalIndex(readUnsignedLEB128(in));
+		throw new IOException("Unrecognized ExportDescriptor type found: "+type);
 	}
 
 	/**
@@ -1542,6 +1600,75 @@ public class ModuleDeserializer {
 		return new TypeIndex(readUnsignedLEB128(in));
 	}
 	
+	private static FunctionIndex readFunctionIndex(InputStream in) throws IOException{
+		return new FunctionIndex(readUnsignedLEB128(in));
+	}
+	
+	private static Table readTable(InputStream in) throws IOException{
+		return new Table(readTableType(in));
+	}
+
+	private static Memory readMemory(InputStream in) throws IOException{
+		return new Memory(readMemoryType(in));
+	}
+
+	private static Global readGlobal(InputStream in) throws IOException{
+		return new Global(readGlobalType(in), readExpression(in));
+	}
+
+	private static Export readExport(InputStream in) throws IOException{
+		return new Export(readName(in), readExportDescriptor(in));
+	}
+
+	private static Start readStart(InputStream in) throws IOException{
+		return new Start(new FunctionIndex(readUnsignedLEB128(in)));
+	}
+
+	private static Element readElement(InputStream in) throws IOException{
+		int encodingFlag = in.read();
+		if(encodingFlag<0)
+			throw new IOException("End of stream found while reading Element.");
+		boolean isActive = (encodingFlag&1)>0;
+		boolean explicitTableIndex = (isActive && ((encodingFlag&2)>0));
+		boolean isDeclarative = ((!isActive) && ((encodingFlag&2)>0));
+		boolean isSimpleIndexes = ((encodingFlag&4)==0);
+		TableIndex table = null;
+		Expression offset = null;
+		ReferenceType type = null;
+		Vector<Expression> init = null;
+		ElementMode mode = isActive?ElementMode.ACTIVE:(isDeclarative?ElementMode.DECLARATIVE:ElementMode.PASSIVE);
+		if(explicitTableIndex)
+			table = new TableIndex(readUnsignedLEB128(in));
+		if(isActive)
+			offset = readExpression(in);
+		if(!(isActive&&!explicitTableIndex)) {
+			if(isSimpleIndexes) {
+				int b = in.read();
+				if(b<0)
+					throw new IOException("End of stream found while reading Element simple indexes marker.");
+				if(b!=0)
+					throw new IOException("Unrecognized marker found when simple indexes expected.");
+			}
+			else {
+				type = readReferenceType(in);
+			}
+		}
+		if(isSimpleIndexes) {
+			Vector<FunctionIndex> functionIndexes = readVector(ModuleDeserializer::readFunctionIndex, in);
+			final Vector<Expression> initFinal = new Vector<>();
+			functionIndexes.stream().forEach((e)->{
+				LinkedList<Instruction> instructions = new LinkedList<>();
+				instructions.add(new ReferenceFunction(e));
+				initFinal.add(new Expression(instructions));
+			});
+			init = initFinal;
+		}
+		else {
+			init = readVector(ModuleDeserializer::readExpression, in);
+		}
+		return new Element(type, init, mode, table, offset);
+	}
+
 	private static <T> Vector<T> readVector(ElementReader<T> elementReader, InputStream in) throws IOException{
 		long count = readUnsignedLEB128(in);
 		Vector<T> retval = new Vector<T>((int)count);
