@@ -368,7 +368,7 @@ public class ModuleSerializer {
 	private static void writeElement(Element datum, OutputStream out) throws IOException{
 		boolean isSimpleIndexes = false;
 		boolean isActive = datum.getMode()==Element.ElementMode.ACTIVE;
-		boolean explicitTableIndex = isActive && (datum.getTable().getIndex()!=0);
+		boolean explicitTableIndex = isActive && (datum.getTable()!=null) && (datum.getTable().getIndex()!=0);
 		
 		int encodingFlag = isActive?0:1;
 		if((datum.getMode()==Element.ElementMode.DECLARATIVE)||explicitTableIndex)

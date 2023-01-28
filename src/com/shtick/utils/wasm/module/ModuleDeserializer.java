@@ -35,6 +35,13 @@ public class ModuleDeserializer {
 	static final int CODE_SECTION_ORDER = 11;
 	static final int DATA_SECTION_ORDER = 12;
 
+	/**
+	 * See: https://webassembly.github.io/spec/core/binary/modules.html#binary-module
+	 * 
+	 * @param in
+	 * @return
+	 * @throws IOException
+	 */
 	public static Module readModule(InputStream in) throws IOException {
 		byte[] magic = readNBytes(4,in);
 		byte[] version = readNBytes(4,in);
@@ -191,72 +198,127 @@ public class ModuleDeserializer {
 		}
 	}
 	
+	/**
+	 * See: https://webassembly.github.io/spec/core/binary/modules.html#binary-customsec
+	 * 
+	 * @param in
+	 * @return
+	 * @throws IOException
+	 */
 	private static CustomSection readCustomSection(InputStream in) throws IOException {
 		long dataSize = readUnsignedLEB128(in);
 		return new CustomSection(readNBytes((int)dataSize,in));
 	}
 	
+	/**
+	 * See: https://webassembly.github.io/spec/core/binary/modules.html#binary-typesec
+	 * 
+	 * @param in
+	 * @return
+	 * @throws IOException
+	 */
 	private static TypeSection readTypeSection(InputStream in) throws IOException {
 		long dataSize = readUnsignedLEB128(in);
 		byte[] bytes = readNBytes((int)dataSize,in);
 		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
-		return new TypeSection(readVector(ModuleDeserializer::readFunctype, bin));
+		TypeSection retval = new TypeSection(readVector(ModuleDeserializer::readFunctype, bin));
+		if(bin.available()!=0)
+			throw new IOException("Leftover bytes cound in Code.");
+		return retval;
 	}
 	
+	/**
+	 * See: https://webassembly.github.io/spec/core/binary/modules.html#binary-importsec
+	 * 
+	 * @param in
+	 * @return
+	 * @throws IOException
+	 */
 	private static ImportSection readImportSection(InputStream in) throws IOException {
 		long dataSize = readUnsignedLEB128(in);
 		byte[] bytes = readNBytes((int)dataSize,in);
 		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
-		return new ImportSection(readVector(ModuleDeserializer::readImport, bin));
+		ImportSection retval = new ImportSection(readVector(ModuleDeserializer::readImport, bin));
+		if(bin.available()!=0)
+			throw new IOException("Leftover bytes cound in Code.");
+		return retval;
 	}
 	
 	private static FunctionSection readFunctionSection(InputStream in) throws IOException {
 		long dataSize = readUnsignedLEB128(in);
 		byte[] bytes = readNBytes((int)dataSize,in);
 		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
-		return new FunctionSection(readVector(ModuleDeserializer::readTypeIndex, bin));
+		FunctionSection retval = new FunctionSection(readVector(ModuleDeserializer::readTypeIndex, bin));
+		if(bin.available()!=0)
+			throw new IOException("Leftover bytes cound in Code.");
+		return retval;
 	}
 	
 	private static TableSection readTableSection(InputStream in) throws IOException {
 		long dataSize = readUnsignedLEB128(in);
 		byte[] bytes = readNBytes((int)dataSize,in);
 		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
-		return new TableSection(readVector(ModuleDeserializer::readTable, bin));
+		TableSection retval = new TableSection(readVector(ModuleDeserializer::readTable, bin));
+		if(bin.available()!=0)
+			throw new IOException("Leftover bytes cound in Code.");
+		return retval;
 	}
 	
 	private static MemorySection readMemorySection(InputStream in) throws IOException {
 		long dataSize = readUnsignedLEB128(in);
 		byte[] bytes = readNBytes((int)dataSize,in);
 		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
-		return new MemorySection(readVector(ModuleDeserializer::readMemory, bin));
+		MemorySection retval = new MemorySection(readVector(ModuleDeserializer::readMemory, bin));
+		if(bin.available()!=0)
+			throw new IOException("Leftover bytes cound in Code.");
+		return retval;
 	}
 	
 	private static GlobalSection readGlobalSection(InputStream in) throws IOException {
 		long dataSize = readUnsignedLEB128(in);
 		byte[] bytes = readNBytes((int)dataSize,in);
 		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
-		return new GlobalSection(readVector(ModuleDeserializer::readGlobal, bin));
+		GlobalSection retval = new GlobalSection(readVector(ModuleDeserializer::readGlobal, bin));
+		if(bin.available()!=0)
+			throw new IOException("Leftover bytes cound in Code.");
+		return retval;
 	}
 
 	private static ExportSection readExportSection(InputStream in) throws IOException {
 		long dataSize = readUnsignedLEB128(in);
 		byte[] bytes = readNBytes((int)dataSize,in);
 		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
-		return new ExportSection(readVector(ModuleDeserializer::readExport, bin));
+		ExportSection retval = new ExportSection(readVector(ModuleDeserializer::readExport, bin));
+		if(bin.available()!=0)
+			throw new IOException("Leftover bytes cound in Code.");
+		return retval;
 	}
 
 	private static StartSection readStartSection(InputStream in) throws IOException {
 		long dataSize = readUnsignedLEB128(in);
 		byte[] bytes = readNBytes((int)dataSize,in);
 		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
-		return new StartSection(readStart(bin));
+		StartSection retval = new StartSection(readStart(bin));
+		if(bin.available()!=0)
+			throw new IOException("Leftover bytes cound in Code.");
+		return retval;
 	}
 
+	/**
+	 * See: https://webassembly.github.io/spec/core/binary/modules.html#binary-elemsec
+	 * 
+	 * @param in
+	 * @return
+	 * @throws IOException
+	 */
 	private static ElementSection readElementSection(InputStream in) throws IOException {
 		long dataSize = readUnsignedLEB128(in);
 		byte[] bytes = readNBytes((int)dataSize,in);
 		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
-		return new ElementSection(readVector(ModuleDeserializer::readElement, bin));
+		ElementSection retval = new ElementSection(readVector(ModuleDeserializer::readElement, bin));
+		if(bin.available()!=0)
+			throw new IOException("Leftover bytes cound in Code.");
+		return retval;
 	}
 
 	private static DataCountSection readDataCountSection(InputStream in) throws IOException {
@@ -271,14 +333,27 @@ public class ModuleDeserializer {
 		long dataSize = readUnsignedLEB128(in);
 		byte[] bytes = readNBytes((int)dataSize,in);
 		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
-		return new DataSection(readVector(ModuleDeserializer::readData, bin));
+		DataSection retval = new DataSection(readVector(ModuleDeserializer::readData, bin));
+		if(bin.available()!=0)
+			throw new IOException("Leftover bytes cound in Code.");
+		return retval;
 	}
 	
+	/**
+	 * See: https://webassembly.github.io/spec/core/binary/modules.html#binary-codesec
+	 * 
+	 * @param in
+	 * @return
+	 * @throws IOException
+	 */
 	private static CodeSection readCodeSection(InputStream in) throws IOException {
 		long dataSize = readUnsignedLEB128(in);
 		byte[] bytes = readNBytes((int)dataSize,in);
 		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
-		return new CodeSection(readVector(ModuleDeserializer::readCode, bin));
+		CodeSection retval = new CodeSection(readVector(ModuleDeserializer::readCode, bin));
+		if(bin.available()!=0)
+			throw new IOException("Leftover bytes cound in Code.");
+		return retval;
 	}
 
 	/********************************************
@@ -467,8 +542,21 @@ public class ModuleDeserializer {
 		return new Data(data, (encoding==1)?DataMode.PASSIVE:DataMode.ACTIVE, new MemoryIndex(memoryIndex), expression);
 	}
 
+	/**
+	 * See: https://webassembly.github.io/spec/core/binary/modules.html#binary-code
+	 * 
+	 * @param in
+	 * @return
+	 * @throws IOException
+	 */
 	private static Code readCode(InputStream in) throws IOException{
-		return new Code(readVector(ModuleDeserializer::readLocals,in), readExpression(in));
+		long dataSize = readUnsignedLEB128(in);
+		byte[] bytes = readNBytes((int)dataSize,in);
+		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
+		Code retval = new Code(readVector(ModuleDeserializer::readLocals,bin), readExpression(bin));
+		if(bin.available()!=0)
+			throw new IOException("Leftover bytes cound in Code.");
+		return retval;
 	}
 
 	private static Locals readLocals(InputStream in) throws IOException{
@@ -1628,7 +1716,7 @@ public class ModuleDeserializer {
 		int encodingFlag = in.read();
 		if(encodingFlag<0)
 			throw new IOException("End of stream found while reading Element.");
-		boolean isActive = (encodingFlag&1)>0;
+		boolean isActive = (encodingFlag&1)==0;
 		boolean explicitTableIndex = (isActive && ((encodingFlag&2)>0));
 		boolean isDeclarative = ((!isActive) && ((encodingFlag&2)>0));
 		boolean isSimpleIndexes = ((encodingFlag&4)==0);
@@ -1647,7 +1735,7 @@ public class ModuleDeserializer {
 				if(b<0)
 					throw new IOException("End of stream found while reading Element simple indexes marker.");
 				if(b!=0)
-					throw new IOException("Unrecognized marker found when simple indexes expected.");
+					throw new IOException("Unrecognized marker found when simple indexes expected: "+b+" (encodingFlag="+encodingFlag+")");
 			}
 			else {
 				type = readReferenceType(in);
