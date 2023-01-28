@@ -35,7 +35,7 @@ public class ModuleDeserializer {
 	static final int CODE_SECTION_ORDER = 11;
 	static final int DATA_SECTION_ORDER = 12;
 
-	public Module readModule(InputStream in) throws IOException {
+	public static Module readModule(InputStream in) throws IOException {
 		byte[] magic = readNBytes(4,in);
 		byte[] version = readNBytes(4,in);
 		if(!Arrays.equals(magic, ModuleSerializer.MAGIC_NUMBER))
@@ -155,7 +155,7 @@ public class ModuleDeserializer {
 		);
 	}
 	
-	public Section readSection(InputStream in) throws IOException {
+	private static Section readSection(InputStream in) throws IOException {
 		int sectionID = in.read();
 		if(sectionID<0)
 			return null;
@@ -191,75 +191,75 @@ public class ModuleDeserializer {
 		}
 	}
 	
-	public CustomSection readCustomSection(InputStream in) throws IOException {
+	private static CustomSection readCustomSection(InputStream in) throws IOException {
 		long dataSize = readUnsignedLEB128(in);
 		return new CustomSection(readNBytes((int)dataSize,in));
 	}
 	
-	public TypeSection readTypeSection(InputStream in) throws IOException {
+	private static TypeSection readTypeSection(InputStream in) throws IOException {
 		long dataSize = readUnsignedLEB128(in);
 		byte[] bytes = readNBytes((int)dataSize,in);
 		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
 		return new TypeSection(readVector(ModuleDeserializer::readFunctype, bin));
 	}
 	
-	public ImportSection readImportSection(InputStream in) throws IOException {
+	private static ImportSection readImportSection(InputStream in) throws IOException {
 		long dataSize = readUnsignedLEB128(in);
 		byte[] bytes = readNBytes((int)dataSize,in);
 		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
 		return new ImportSection(readVector(ModuleDeserializer::readImport, bin));
 	}
 	
-	public FunctionSection readFunctionSection(InputStream in) throws IOException {
+	private static FunctionSection readFunctionSection(InputStream in) throws IOException {
 		long dataSize = readUnsignedLEB128(in);
 		byte[] bytes = readNBytes((int)dataSize,in);
 		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
 		return new FunctionSection(readVector(ModuleDeserializer::readTypeIndex, bin));
 	}
 	
-	public TableSection readTableSection(InputStream in) throws IOException {
+	private static TableSection readTableSection(InputStream in) throws IOException {
 		long dataSize = readUnsignedLEB128(in);
 		byte[] bytes = readNBytes((int)dataSize,in);
 		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
 		return new TableSection(readVector(ModuleDeserializer::readTable, bin));
 	}
 	
-	public MemorySection readMemorySection(InputStream in) throws IOException {
+	private static MemorySection readMemorySection(InputStream in) throws IOException {
 		long dataSize = readUnsignedLEB128(in);
 		byte[] bytes = readNBytes((int)dataSize,in);
 		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
 		return new MemorySection(readVector(ModuleDeserializer::readMemory, bin));
 	}
 	
-	public GlobalSection readGlobalSection(InputStream in) throws IOException {
+	private static GlobalSection readGlobalSection(InputStream in) throws IOException {
 		long dataSize = readUnsignedLEB128(in);
 		byte[] bytes = readNBytes((int)dataSize,in);
 		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
 		return new GlobalSection(readVector(ModuleDeserializer::readGlobal, bin));
 	}
 
-	public ExportSection readExportSection(InputStream in) throws IOException {
+	private static ExportSection readExportSection(InputStream in) throws IOException {
 		long dataSize = readUnsignedLEB128(in);
 		byte[] bytes = readNBytes((int)dataSize,in);
 		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
 		return new ExportSection(readVector(ModuleDeserializer::readExport, bin));
 	}
 
-	public StartSection readStartSection(InputStream in) throws IOException {
+	private static StartSection readStartSection(InputStream in) throws IOException {
 		long dataSize = readUnsignedLEB128(in);
 		byte[] bytes = readNBytes((int)dataSize,in);
 		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
 		return new StartSection(readStart(bin));
 	}
 
-	public ElementSection readElementSection(InputStream in) throws IOException {
+	private static ElementSection readElementSection(InputStream in) throws IOException {
 		long dataSize = readUnsignedLEB128(in);
 		byte[] bytes = readNBytes((int)dataSize,in);
 		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
 		return new ElementSection(readVector(ModuleDeserializer::readElement, bin));
 	}
 
-	public DataCountSection readDataCountSection(InputStream in) throws IOException {
+	private static DataCountSection readDataCountSection(InputStream in) throws IOException {
 		long dataSize = readUnsignedLEB128(in);
 		long dataCount = readUnsignedLEB128(in);
 		if(ModuleSerializer.getUnsignedLEB128Size(dataCount)!=dataSize)
@@ -267,14 +267,14 @@ public class ModuleDeserializer {
 		return new DataCountSection(dataCount);
 	}
 	
-	public DataSection readDataSection(InputStream in) throws IOException {
+	private static DataSection readDataSection(InputStream in) throws IOException {
 		long dataSize = readUnsignedLEB128(in);
 		byte[] bytes = readNBytes((int)dataSize,in);
 		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
 		return new DataSection(readVector(ModuleDeserializer::readData, bin));
 	}
 	
-	public CodeSection readCodeSection(InputStream in) throws IOException {
+	private static CodeSection readCodeSection(InputStream in) throws IOException {
 		long dataSize = readUnsignedLEB128(in);
 		byte[] bytes = readNBytes((int)dataSize,in);
 		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
