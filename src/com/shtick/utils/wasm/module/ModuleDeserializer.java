@@ -223,7 +223,7 @@ public class ModuleDeserializer {
 		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
 		TypeSection retval = new TypeSection(readVector(ModuleDeserializer::readFunctype, bin));
 		if(bin.available()!=0)
-			throw new IOException("Leftover bytes cound in Code.");
+			throw new IOException("Leftover bytes found in Code.");
 		return retval;
 	}
 	
@@ -240,7 +240,7 @@ public class ModuleDeserializer {
 		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
 		ImportSection retval = new ImportSection(readVector(ModuleDeserializer::readImport, bin));
 		if(bin.available()!=0)
-			throw new IOException("Leftover bytes cound in Code.");
+			throw new IOException("Leftover bytes found in Code.");
 		return retval;
 	}
 	
@@ -250,7 +250,7 @@ public class ModuleDeserializer {
 		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
 		FunctionSection retval = new FunctionSection(readVector(ModuleDeserializer::readTypeIndex, bin));
 		if(bin.available()!=0)
-			throw new IOException("Leftover bytes cound in Code.");
+			throw new IOException("Leftover bytes found in Code.");
 		return retval;
 	}
 	
@@ -260,7 +260,7 @@ public class ModuleDeserializer {
 		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
 		TableSection retval = new TableSection(readVector(ModuleDeserializer::readTable, bin));
 		if(bin.available()!=0)
-			throw new IOException("Leftover bytes cound in Code.");
+			throw new IOException("Leftover bytes found in Code.");
 		return retval;
 	}
 	
@@ -270,7 +270,7 @@ public class ModuleDeserializer {
 		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
 		MemorySection retval = new MemorySection(readVector(ModuleDeserializer::readMemory, bin));
 		if(bin.available()!=0)
-			throw new IOException("Leftover bytes cound in Code.");
+			throw new IOException("Leftover bytes found in Code.");
 		return retval;
 	}
 	
@@ -280,7 +280,7 @@ public class ModuleDeserializer {
 		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
 		GlobalSection retval = new GlobalSection(readVector(ModuleDeserializer::readGlobal, bin));
 		if(bin.available()!=0)
-			throw new IOException("Leftover bytes cound in Code.");
+			throw new IOException("Leftover bytes found in Code.");
 		return retval;
 	}
 
@@ -290,7 +290,7 @@ public class ModuleDeserializer {
 		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
 		ExportSection retval = new ExportSection(readVector(ModuleDeserializer::readExport, bin));
 		if(bin.available()!=0)
-			throw new IOException("Leftover bytes cound in Code.");
+			throw new IOException("Leftover bytes found in Code.");
 		return retval;
 	}
 
@@ -300,7 +300,7 @@ public class ModuleDeserializer {
 		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
 		StartSection retval = new StartSection(readStart(bin));
 		if(bin.available()!=0)
-			throw new IOException("Leftover bytes cound in Code.");
+			throw new IOException("Leftover bytes found in Code.");
 		return retval;
 	}
 
@@ -317,7 +317,7 @@ public class ModuleDeserializer {
 		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
 		ElementSection retval = new ElementSection(readVector(ModuleDeserializer::readElement, bin));
 		if(bin.available()!=0)
-			throw new IOException("Leftover bytes cound in Code.");
+			throw new IOException("Leftover bytes found in Code.");
 		return retval;
 	}
 
@@ -335,7 +335,7 @@ public class ModuleDeserializer {
 		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
 		DataSection retval = new DataSection(readVector(ModuleDeserializer::readData, bin));
 		if(bin.available()!=0)
-			throw new IOException("Leftover bytes cound in Code.");
+			throw new IOException("Leftover bytes found in Code.");
 		return retval;
 	}
 	
@@ -352,7 +352,7 @@ public class ModuleDeserializer {
 		ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
 		CodeSection retval = new CodeSection(readVector(ModuleDeserializer::readCode, bin));
 		if(bin.available()!=0)
-			throw new IOException("Leftover bytes cound in Code.");
+			throw new IOException("Leftover bytes found in Code.");
 		return retval;
 	}
 
@@ -1736,10 +1736,14 @@ public class ModuleDeserializer {
 					throw new IOException("End of stream found while reading Element simple indexes marker.");
 				if(b!=0)
 					throw new IOException("Unrecognized marker found when simple indexes expected: "+b+" (encodingFlag="+encodingFlag+")");
+				type = ReferenceType.REFTYPE_FUNCREF;
 			}
 			else {
 				type = readReferenceType(in);
 			}
+		}
+		else {
+			type = ReferenceType.REFTYPE_FUNCREF;
 		}
 		if(isSimpleIndexes) {
 			Vector<FunctionIndex> functionIndexes = readVector(ModuleDeserializer::readFunctionIndex, in);

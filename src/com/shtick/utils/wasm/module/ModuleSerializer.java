@@ -365,6 +365,13 @@ public class ModuleSerializer {
 		writeIndex(datum.getFunctionIndex(), out);
 	}
 	
+	/**
+	 * See: https://webassembly.github.io/spec/core/binary/modules.html#binary-elemsec
+	 * 
+	 * @param datum
+	 * @param out
+	 * @throws IOException
+	 */
 	private static void writeElement(Element datum, OutputStream out) throws IOException{
 		boolean isSimpleIndexes = false;
 		boolean isActive = datum.getMode()==Element.ElementMode.ACTIVE;

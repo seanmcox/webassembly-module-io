@@ -3,6 +3,7 @@
  */
 package com.shtick.utils.wasm.module;
 
+import java.security.InvalidParameterException;
 import java.util.Vector;
 
 /**
@@ -30,6 +31,12 @@ public class Element {
 	 * @param offset Ignored/meaningless if mode isn't ACTIVE
 	 */
 	public Element(ReferenceType type, Vector<Expression> init, ElementMode mode, TableIndex table, Expression offset) {
+		if(type==null)
+			throw new InvalidParameterException("Type cannot be null.");
+		if(init==null)
+			throw new InvalidParameterException("Init cannot be null.");
+		if(mode==null)
+			throw new InvalidParameterException("Mode cannot be null.");
 		this.type = type;
 		this.init = init;
 		this.mode = mode;
@@ -70,5 +77,11 @@ public class Element {
 	 */
 	public Expression getOffset() {
 		return offset;
+	}
+
+	@Override
+	public String toString() {
+		return "Element [type=" + type + ", init=[" + init.size() + " items], mode=" + mode + ", table=" + table + ", offset=" + offset
+				+ "]";
 	}
 }
