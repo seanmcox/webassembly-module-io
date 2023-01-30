@@ -1727,6 +1727,8 @@ public class ModuleDeserializer {
 		ElementMode mode = isActive?ElementMode.ACTIVE:(isDeclarative?ElementMode.DECLARATIVE:ElementMode.PASSIVE);
 		if(explicitTableIndex)
 			table = new TableIndex(readUnsignedLEB128(in));
+		else if(isActive)
+			table = new TableIndex(0);
 		if(isActive)
 			offset = readExpression(in);
 		if(!(isActive&&!explicitTableIndex)) {

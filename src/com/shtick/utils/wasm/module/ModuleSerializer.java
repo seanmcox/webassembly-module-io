@@ -25,7 +25,7 @@ public class ModuleSerializer {
 	static final int CODE_SECTION_ID = 10;
 	static final int DATA_SECTION_ID = 11;
 	static final int DATA_COUNT_SECTION_ID = 12;
-
+	
 	public static void writeModule(Module module, OutputStream out) throws IOException {
 		out.write(MAGIC_NUMBER);
 		out.write(VERSION_NUMBER);
@@ -2111,14 +2111,16 @@ public class ModuleSerializer {
 	 */
 	private static void writeUnsignedLEB128(long value, OutputStream out) throws IOException {
 		int b_out;
+		boolean more=true;
 		do {
 			b_out = (int)(value&0x07FL);
 			value >>>= 7;
-			if(value==0)
-				out.write(b_out);
-			else
+			more = !(value==0);
+			if(more)
 				out.write(b_out|0x080);
-		} while(value != 0);
+			else
+				out.write(b_out);
+		} while(more);
 	}
 	
 	protected static int getUnsignedLEB128Size(long value) {
@@ -2144,17 +2146,15 @@ public class ModuleSerializer {
 		while(more) {
 			b_out = (int)(value&0x07FL);
 			value >>= 7;
-			if(
-				((value==0)&&(0==(b_out&0x040)))
-				||
-				((value==-1)&&(0!=(b_out&0x040)))
-			) {
-				out.write(b_out);
-				more=false;
-			}
-			else {
+			more = !(
+						((value==0)&&(0==(b_out&0x040)))
+						||
+						((value==-1)&&(0!=(b_out&0x040)))
+					);
+			if(more)
 				out.write(b_out|0x080);
-			}
+			else
+				out.write(b_out);
 		}
 	}
 	

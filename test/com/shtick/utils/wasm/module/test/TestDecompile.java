@@ -19,6 +19,16 @@ import com.shtick.utils.wasm.module.ModuleDeserializer;
 import com.shtick.utils.wasm.module.ModuleSerializer;
 
 /**
+ * This test helped me to identify a few bugs, but it became a boondogle when analysing differences in the Code Section
+ * because the Rust compiled code uses weird (inefficient and unpredictably inefficient) number encoding.
+ * 
+ * eg. 0 was often encoded as 0x80, 0x80, 0x80, 0x80, 0 instead of just a single byte, 0, but with opcode 65 (0x41) where
+ * a signed LEB128 accompanies the opcode, I would sometimes find some numbers encoded efficiently/canonically, and others
+ * encoded inefficiently. (I gave up when I found cases with the same number encoded two different ways. Some kind of watermark?)
+ * 
+ * TODO It would be nice to have a good test, of decoding/re-encoding, but I'll probably have to use modules compiles with this library
+ * once a I have some good ones.
+ * 
  * @author seanmcox
  *
  */

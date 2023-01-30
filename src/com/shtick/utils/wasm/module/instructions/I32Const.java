@@ -25,4 +25,9 @@ public class I32Const implements Instruction {
 	public int getValue() {
 		return value;
 	}
+
+	@Override
+	public String toString() {
+		return "I32Const [value=" + value + "]";
+	}
 }

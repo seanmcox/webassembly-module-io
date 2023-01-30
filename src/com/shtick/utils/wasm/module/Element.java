@@ -37,6 +37,12 @@ public class Element {
 			throw new InvalidParameterException("Init cannot be null.");
 		if(mode==null)
 			throw new InvalidParameterException("Mode cannot be null.");
+		if(mode==ElementMode.ACTIVE) {
+			if(table==null)
+				throw new InvalidParameterException("Table cannot be null for active element.");
+			if(offset==null)
+				throw new InvalidParameterException("Offset cannot be null for active element.");
+		}
 		this.type = type;
 		this.init = init;
 		this.mode = mode;
